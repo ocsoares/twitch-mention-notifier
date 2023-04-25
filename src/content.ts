@@ -1,14 +1,21 @@
 /* eslint-disable @typescript-eslint/naming-convention */
+
 import { Client, ChatUserstate } from 'tmi.js';
 
 console.log('Twitch Mention Notifier is enabled');
 
+chrome.storage.local.get((result) => {
+    console.log('STORAGE LOCAL:', result);
+});
+
 async function main() {
     let nameInput: string;
 
-    chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-        console.log('request:', request);
+    chrome.storage.local.get('name', (result) => {
+        nameInput = result.name;
+    });
 
+    chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         const { name } = request;
 
         nameInput = name;
@@ -27,14 +34,10 @@ async function main() {
             self: boolean,
         ) => {
             if (nameInput) {
-                console.log(`${tags.username}: ${message}`);
-
                 const nameInputRegex = new RegExp(`\\b${nameInput}\\b`);
                 const wasMentioned = nameInputRegex.test(message);
 
                 if (wasMentioned) {
-                    console.log('MARCADO !');
-
                     const toBackgroundScript = chrome.runtime.connect({
                         name: 'content-script',
                     });

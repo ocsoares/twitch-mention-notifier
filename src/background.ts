@@ -1,10 +1,6 @@
 chrome.runtime.onConnect.addListener((port) => {
-    console.log('PORT:', port);
-
     if (port.name === 'content-script') {
         port.onMessage.addListener((message) => {
-            console.log('MESSAGE do BACKGROUND', message);
-
             const { sendNotification, mentionedBy } = message;
 
             if (sendNotification) {
