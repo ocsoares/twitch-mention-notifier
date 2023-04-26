@@ -9,7 +9,9 @@ chrome.runtime.onConnect.addListener((port) => {
                 'lastNotification',
             );
 
-            const nextNotification = lastNotification + notificationCooldown;
+            const nextNotification = lastNotification
+                ? lastNotification + notificationCooldown
+                : 0;
 
             const currentTime = Date.now();
 
@@ -22,7 +24,9 @@ chrome.runtime.onConnect.addListener((port) => {
                         message: `Você foi marcado por ${mentionedBy}`,
                     });
 
-                    chrome.storage.local.set({ lastNotification: Date.now() });
+                    await chrome.storage.local.set({
+                        lastNotification: Date.now(),
+                    });
                 }
             }
         });
