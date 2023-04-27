@@ -65,7 +65,6 @@ async function main() {
             message: string,
             self: boolean,
         ) => {
-            console.log('message:', message);
             if (nameInput) {
                 const toBackgroundScript = chrome.runtime.connect({
                     name: 'content-script',
