@@ -70,6 +70,23 @@ async function main() {
 
                     return;
                 }
+
+                // TESTAR mais isso aqui, mas ACHO que deu certo JÁ...
+                // Ver se o "some" lá embaixo tá pegando só A PRIMEIRA ocorrência mesmo...
+                if (nickAbbreviationInputArray.length) {
+                    const nickAbbreviationInputRegex = new RegExp(
+                        `\\b(${nickAbbreviationInputArray.join('|')})\\b`,
+                    );
+
+                    const wasMentionedAbbreviated =
+                        nickAbbreviationInputArray.some((word) =>
+                            nickAbbreviationInputRegex.test(word),
+                        );
+
+                    if (wasMentionedAbbreviated) {
+                        postMessageToBackgroundScript();
+                    }
+                }
             }
         },
     );
