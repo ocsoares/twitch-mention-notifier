@@ -10,18 +10,35 @@ chrome.storage.local.get((result) => {
 
 async function main() {
     let nameInput: string;
+    let channelInput: string;
+    let nickAbbreviationInput: string;
 
-    chrome.storage.local.get('name', (result) => {
-        nameInput = result.name;
-    });
+    await new Promise((resolve) =>
+        chrome.storage.local.get((result) => {
+            const { name, channel, nickAbbreviation } = result;
+
+            nameInput = name;
+            channelInput = channel;
+            nickAbbreviationInput = nickAbbreviation;
+
+            resolve([name, channel, nickAbbreviation]);
+        }),
+    );
 
     chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-        const { name } = request;
+        const { name, channel, nickAbbreviation } = request;
 
         nameInput = name;
+        channelInput = channel;
+        nickAbbreviationInput = nickAbbreviation;
     });
+    // Separate by comma, remove spaces and empty strings
+    const nickAbbreviationInputArray = nickAbbreviationInput
+        .split(',')
+        .map((str) => str.replace(/\s+/g, '').trim())
+        .filter((str) => str !== '');
 
-    const tmiClient = new Client({ channels: ['ccbdu'] });
+    const tmiClient = new Client({ channels: [channelInput] });
 
     await tmiClient.connect();
 
@@ -34,18 +51,24 @@ async function main() {
             self: boolean,
         ) => {
             if (nameInput) {
-                const nameInputRegex = new RegExp(`\\b${nameInput}\\b`);
-                const wasMentioned = nameInputRegex.test(message);
+                const toBackgroundScript = chrome.runtime.connect({
+                    name: 'content-script',
+                });
 
-                if (wasMentioned) {
-                    const toBackgroundScript = chrome.runtime.connect({
-                        name: 'content-script',
-                    });
-
+                function postMessageToBackgroundScript() {
                     toBackgroundScript.postMessage({
                         sendNotification: true,
                         mentionedBy: tags.username,
                     });
+                }
+
+                const nameInputRegex = new RegExp(`\\b${nameInput}\\b`);
+                const wasMentioned = nameInputRegex.test(message);
+
+                if (wasMentioned) {
+                    postMessageToBackgroundScript();
+
+                    return;
                 }
             }
         },
