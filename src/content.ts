@@ -12,6 +12,8 @@ async function main() {
     let nameInput: string;
     let channelInput: string;
     let nickAbbreviationInput: string;
+    let nickAbbreviationInputArray: string[] = [];
+    let tmiConnected: [string, number] | undefined = undefined;
 
     await new Promise((resolve) =>
         chrome.storage.local.get((result) => {
@@ -25,22 +27,35 @@ async function main() {
         }),
     );
 
-    chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-        const { name, channel, nickAbbreviation } = request;
-
-        nameInput = name;
-        channelInput = channel;
-        nickAbbreviationInput = nickAbbreviation;
-    });
-    // Separate by comma, remove spaces and empty strings
-    const nickAbbreviationInputArray = nickAbbreviationInput
-        .split(',')
-        .map((str) => str.replace(/\s+/g, '').trim())
-        .filter((str) => str !== '');
-
     const tmiClient = new Client({ channels: [channelInput] });
 
-    await tmiClient.connect();
+    chrome.runtime.onMessage.addListener(
+        async (request, sender, sendResponse) => {
+            const { name, channel, nickAbbreviation } = request;
+
+            if (channelInput && tmiConnected) {
+                await tmiClient.part(channelInput);
+            }
+
+            nameInput = name;
+            channelInput = channel;
+            nickAbbreviationInput = nickAbbreviation;
+
+            if (tmiConnected) {
+                await tmiClient.join(channelInput);
+            }
+        },
+    );
+
+    // Separate by comma, remove spaces and empty strings
+    if (nickAbbreviationInput) {
+        nickAbbreviationInputArray = nickAbbreviationInput
+            .split(',')
+            .map((str) => str.replace(/\s+/g, '').trim())
+            .filter((str) => str !== '');
+    }
+
+    tmiConnected = await tmiClient.connect();
 
     tmiClient.on(
         'message',
@@ -50,6 +65,7 @@ async function main() {
             message: string,
             self: boolean,
         ) => {
+            console.log('message:', message);
             if (nameInput) {
                 const toBackgroundScript = chrome.runtime.connect({
                     name: 'content-script',
