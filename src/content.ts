@@ -100,7 +100,7 @@ async function main() {
                     });
                 }
 
-                const nameInputRegex = new RegExp(`\\b${nameInput}\\b`);
+                const nameInputRegex = new RegExp(`\\b${nameInput}\\b`, 'i');
                 const wasMentioned = nameInputRegex.test(message);
 
                 if (wasMentioned) {
@@ -111,6 +111,7 @@ async function main() {
 
                 const nickAbbreviationInputRegex = new RegExp(
                     `\\b(${nickAbbreviationInputArray.join('|')})\\b`,
+                    'i',
                 );
 
                 const wasMentionedAbbreviated =
