@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 
 import { Client, ChatUserstate } from 'tmi.js';
+import { createNickAbbreviationInputArray } from './utils/create-nick-abbreviation-input-array.util';
 
 console.log('Twitch Mention Notifier is enabled');
 
@@ -40,6 +41,9 @@ async function main() {
             nameInput = name;
             channelInput = channel;
             nickAbbreviationInput = nickAbbreviation;
+            nickAbbreviationInputArray = createNickAbbreviationInputArray(
+                nickAbbreviationInput,
+            );
 
             if (tmiConnected) {
                 await tmiClient.join(channelInput);
@@ -47,12 +51,11 @@ async function main() {
         },
     );
 
-    // Separate by comma, remove spaces and empty strings
+    // Separate by comma in an array, remove spaces and empty strings
     if (nickAbbreviationInput) {
-        nickAbbreviationInputArray = nickAbbreviationInput
-            .split(',')
-            .map((str) => str.replace(/\s+/g, '').trim())
-            .filter((str) => str !== '');
+        nickAbbreviationInputArray = createNickAbbreviationInputArray(
+            nickAbbreviationInput,
+        );
     }
 
     tmiConnected = await tmiClient.connect();
@@ -66,7 +69,7 @@ async function main() {
             self: boolean,
         ) => {
             if (nameInput) {
-                let badge: string;
+                let badge = '';
 
                 if (tags.badges.broadcaster) {
                     badge = '[BROADCASTER]';
@@ -106,16 +109,14 @@ async function main() {
                     return;
                 }
 
+                const nickAbbreviationInputRegex = new RegExp(
+                    `\\b(${nickAbbreviationInputArray.join('|')})\\b`,
+                );
+
+                const wasMentionedAbbreviated =
+                    nickAbbreviationInputRegex.test(message);
+
                 if (nickAbbreviationInputArray.length) {
-                    const nickAbbreviationInputRegex = new RegExp(
-                        `\\b(${nickAbbreviationInputArray.join('|')})\\b`,
-                    );
-
-                    const wasMentionedAbbreviated =
-                        nickAbbreviationInputArray.some((word) =>
-                            nickAbbreviationInputRegex.test(word),
-                        );
-
                     if (wasMentionedAbbreviated) {
                         postMessageToBackgroundScript();
                     }
