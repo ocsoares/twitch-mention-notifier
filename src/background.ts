@@ -3,7 +3,10 @@ const notificationCooldown = 20 * 1000; // 20 seconds
 chrome.runtime.onConnect.addListener((port) => {
     if (port.name === 'content-script') {
         port.onMessage.addListener(async (message) => {
-            const { sendNotification, mentionedBy } = message;
+            const { sendNotification, mentionedInChannel, mentionedBy, badge } =
+                message;
+
+            console.log('mentionedInChannel', mentionedInChannel);
 
             const { lastNotification } = await chrome.storage.local.get(
                 'lastNotification',
@@ -21,7 +24,7 @@ chrome.runtime.onConnect.addListener((port) => {
                         type: 'basic',
                         iconUrl: 'icons/mentioned-icon_16.png',
                         title: 'Twitch Mention Notifier',
-                        message: `Você foi marcado por ${mentionedBy}`,
+                        message: `Você foi mencionado por ${badge}${mentionedBy} no canal "${mentionedInChannel}" !`,
                     });
 
                     await chrome.storage.local.set({

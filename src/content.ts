@@ -33,7 +33,7 @@ async function main() {
         async (request, sender, sendResponse) => {
             const { name, channel, nickAbbreviation } = request;
 
-            if (channelInput && tmiConnected) {
+            if (tmiConnected && channelInput) {
                 await tmiClient.part(channelInput);
             }
 
@@ -66,6 +66,24 @@ async function main() {
             self: boolean,
         ) => {
             if (nameInput) {
+                let badge: string;
+
+                if (tags.badges.broadcaster) {
+                    badge = '[BROADCASTER]';
+                }
+
+                if (tags.badges.vip) {
+                    badge = '[VIP]';
+                }
+
+                if (tags.badges.moderator) {
+                    badge = '[MODERATOR]';
+                }
+
+                if (tags.badges.vip && tags.badges.moderator) {
+                    badge = '[VIP/MODERATOR]';
+                }
+
                 const toBackgroundScript = chrome.runtime.connect({
                     name: 'content-script',
                 });
@@ -73,7 +91,9 @@ async function main() {
                 function postMessageToBackgroundScript() {
                     toBackgroundScript.postMessage({
                         sendNotification: true,
+                        mentionedInChannel: channel.replace('#', ''),
                         mentionedBy: tags.username,
+                        badge,
                     });
                 }
 
@@ -86,8 +106,6 @@ async function main() {
                     return;
                 }
 
-                // TESTAR mais isso aqui, mas ACHO que deu certo JÁ...
-                // Ver se o "some" lá embaixo tá pegando só A PRIMEIRA ocorrência mesmo...
                 if (nickAbbreviationInputArray.length) {
                     const nickAbbreviationInputRegex = new RegExp(
                         `\\b(${nickAbbreviationInputArray.join('|')})\\b`,
