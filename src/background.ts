@@ -24,7 +24,7 @@ chrome.runtime.onConnect.addListener((port) => {
                         type: 'basic',
                         iconUrl: 'icons/mentioned-icon_16.png',
                         title: 'Twitch Mention Notifier',
-                        message: `Você foi mencionado por ${badge}${mentionedBy} no canal "${mentionedInChannel}" !`,
+                        message: `You were mentioned by ${badge}${mentionedBy} in channel "${mentionedInChannel}" !`,
                     });
 
                     await chrome.storage.local.set({
