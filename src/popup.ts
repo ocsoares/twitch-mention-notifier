@@ -7,18 +7,18 @@ const button = document.getElementById('button');
 
 button.addEventListener('click', async () => {
     if (channelInput.value.length < 4 || channelInput.value.length > 25) {
-        alert('O canal precisa ter entre 4 e 25 caracteres');
+        alert('The channel must have between 4 and 25 characters');
 
         return;
     }
 
     if (nameInput.value.length < 4 || nameInput.value.length > 25) {
-        alert('O nome precisa ter entre 4 e 25 caracteres');
+        alert('The name needs to have between 4 and 25 characters');
 
         return;
     }
 
-    alert('Extensão ativada com sucesso !');
+    alert('Extension activated successfully !');
 
     await chrome.storage.local.set({
         name: nameInput.value,
