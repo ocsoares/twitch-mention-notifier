@@ -6,8 +6,6 @@ chrome.runtime.onConnect.addListener((port) => {
             const { sendNotification, mentionedInChannel, mentionedBy, badge } =
                 message;
 
-            console.log('mentionedInChannel', mentionedInChannel);
-
             const { lastNotification } = await chrome.storage.local.get(
                 'lastNotification',
             );
