@@ -6,11 +6,16 @@ import { CleanWebpackPlugin } from 'clean-webpack-plugin';
 import { resolve } from 'path';
 import * as CopyWebpackPlugin from 'copy-webpack-plugin';
 
+import ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
+
 const config: Configuration = {
-    entry: './src/content.ts',
+    entry: {
+        content: './src/content.ts',
+        popup: './src/popup.ts',
+    },
     output: {
         path: resolve(__dirname, '..', 'webpack-dist'),
-        filename: 'content.js',
+        filename: '[name].js',
     },
     module: {
         rules: [
@@ -40,16 +45,16 @@ const config: Configuration = {
                     context: 'public',
                 },
                 {
-                    from: 'dist/popup.js',
-                    to: 'popup.js',
-                    context: '.',
-                },
-                {
                     from: 'dist/background.js',
                     to: 'background.js',
                     context: '.',
                 },
             ],
+        }),
+        new ForkTsCheckerWebpackPlugin({
+            typescript: {
+                configFile: 'tsconfig.json',
+            },
         }),
         new MiniCssExtractPlugin({
             filename: '[name].[contenthash].css',
