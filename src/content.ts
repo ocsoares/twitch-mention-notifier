@@ -5,10 +5,6 @@ import { createNickAbbreviationInputArray } from './utils/create-nick-abbreviati
 
 console.log('Twitch Mention Notifier is enabled');
 
-chrome.storage.local.get((result) => {
-    console.log('STORAGE LOCAL:', result);
-});
-
 async function main() {
     let nameInput: string;
     let channelInput: string;
@@ -70,19 +66,19 @@ async function main() {
             if (nameInput) {
                 let badge = '';
 
-                if (tags.badges.broadcaster) {
+                if (tags.badges && tags.badges.broadcaster) {
                     badge = '[BROADCASTER]';
                 }
 
-                if (tags.badges.vip) {
+                if (tags.badges && tags.badges.vip) {
                     badge = '[VIP]';
                 }
 
-                if (tags.badges.moderator) {
+                if (tags.badges && tags.badges.moderator) {
                     badge = '[MODERATOR]';
                 }
 
-                if (tags.badges.vip && tags.badges.moderator) {
+                if (tags.badges && tags.badges.vip && tags.badges.moderator) {
                     badge = '[VIP/MODERATOR]';
                 }
 
