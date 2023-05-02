@@ -18,12 +18,48 @@ chrome.runtime.onConnect.addListener((port) => {
 
             if (sendNotification) {
                 if (currentTime > nextNotification) {
-                    chrome.notifications.create({
-                        type: 'basic',
-                        iconUrl: 'icons/mentioned-icon_16.png',
-                        title: 'Twitch Mention Notifier',
-                        message: `You were mentioned by ${badge}${mentionedBy} in channel "${mentionedInChannel}" !`,
-                    });
+                    chrome.notifications.create(
+                        {
+                            type: 'basic',
+                            iconUrl: 'icons/mentioned-icon_16.png',
+                            title: 'Twitch Mention Notifier',
+                            message: `You were mentioned by ${badge}${mentionedBy} in channel "${mentionedInChannel}" !`,
+                            buttons: [
+                                {
+                                    title: 'Open Twitch Channel',
+                                },
+                            ],
+                        },
+                        (notificationId) => {
+                            // Open the mentioned Twitch channel when click on the notification window
+                            chrome.notifications.onClicked.addListener(
+                                (clickedNotificationId) => {
+                                    if (
+                                        clickedNotificationId === notificationId
+                                    ) {
+                                        chrome.tabs.create({
+                                            url: `https://www.twitch.tv/${mentionedInChannel}`,
+                                        });
+                                    }
+                                },
+                            );
+
+                            // Open the mentioned Twitch channel when click on the notification button
+                            chrome.notifications.onButtonClicked.addListener(
+                                (clickedNotificationId, buttonIndex) => {
+                                    if (
+                                        clickedNotificationId ===
+                                            notificationId &&
+                                        buttonIndex === 0
+                                    ) {
+                                        chrome.tabs.create({
+                                            url: `https://www.twitch.tv/${mentionedInChannel}`,
+                                        });
+                                    }
+                                },
+                            );
+                        },
+                    );
 
                     await chrome.storage.local.set({
                         lastNotification: Date.now(),
