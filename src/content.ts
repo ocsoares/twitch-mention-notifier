@@ -30,26 +30,25 @@ async function main() {
 
     const tmiClient = new Client({ channels: [channelInput] });
 
-    chrome.runtime.onMessage.addListener(
-        async (request, sender, sendResponse) => {
-            const { name, channel, nickAbbreviation } = request;
+    chrome.runtime.onMessage.addListener(async (request) => {
+        const { name, channel, nickAbbreviation } = request;
 
-            if (tmiConnected && channelInput) {
-                await tmiClient.part(channelInput);
-            }
+        if (tmiConnected && channelInput) {
+            await tmiClient.part(channelInput);
+        }
 
-            nameInput = name;
-            channelInput = channel;
-            nickAbbreviationInput = nickAbbreviation;
-            nickAbbreviationInputArray = createNickAbbreviationInputArray(
-                nickAbbreviationInput,
-            );
+        nameInput = name;
+        channelInput = channel;
 
-            if (tmiConnected) {
-                await tmiClient.join(channelInput);
-            }
-        },
-    );
+        nickAbbreviationInput = nickAbbreviation;
+        nickAbbreviationInputArray = createNickAbbreviationInputArray(
+            nickAbbreviationInput,
+        );
+
+        if (tmiConnected) {
+            await tmiClient.join(channelInput);
+        }
+    });
 
     // Separate by comma in an array, remove spaces and empty strings
     if (nickAbbreviationInput) {

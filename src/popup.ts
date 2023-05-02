@@ -1,3 +1,5 @@
+import { checkIfChannelExists } from './services/check-if-channel-exists.service';
+
 const channelInput = document.getElementById('channel') as HTMLInputElement;
 const nameInput = document.getElementById('name') as HTMLInputElement;
 const nickAbbreviationInput = document.getElementById(
@@ -14,6 +16,14 @@ button.addEventListener('click', async () => {
 
     if (nameInput.value.length < 4 || nameInput.value.length > 25) {
         alert('The name needs to have between 4 and 25 characters');
+
+        return;
+    }
+
+    const isValidChannel = await checkIfChannelExists(channelInput.value);
+
+    if (!isValidChannel) {
+        alert('The channel does not exist !');
 
         return;
     }
