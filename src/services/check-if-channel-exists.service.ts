@@ -1,7 +1,8 @@
 import axios from 'axios';
 
 export async function checkIfChannelExists(channel: string): Promise<boolean> {
-    const url = 'https://twitch-api-jmwk.onrender.com/twitch/api/search-user/';
+    const url =
+        'https://twitch-api-jmwk.onrender.com/twitch/api/search-channel/';
 
     const isValidChannel = await axios.get(`${url}${channel}`);
 
