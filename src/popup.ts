@@ -7,40 +7,70 @@ const nickAbbreviationInput = document.getElementById(
 ) as HTMLInputElement;
 const button = document.getElementById('button');
 
-button.addEventListener('click', async () => {
-    if (channelInput.value.length < 4 || channelInput.value.length > 25) {
-        alert('The channel must have between 4 and 25 characters');
+async function main() {
+    const { name, channel, nickAbbreviation } = await chrome.storage.local.get([
+        'name',
+        'channel',
+        'nickAbbreviation',
+    ]);
 
-        return;
+    nameInput.value = '';
+    channelInput.value = '';
+    nickAbbreviationInput.value = '';
+
+    if (name && channel) {
+        nameInput.value = name;
+        channelInput.value = channel;
+
+        if (nickAbbreviation) {
+            nickAbbreviationInput.value = nickAbbreviation;
+        }
     }
 
-    if (nameInput.value.length < 4 || nameInput.value.length > 25) {
-        alert('The name needs to have between 4 and 25 characters');
+    button.addEventListener('click', async () => {
+        if (!name || !channel || !nickAbbreviation) {
+            if (
+                channelInput.value.length < 4 ||
+                channelInput.value.length > 25
+            ) {
+                alert('The channel must have between 4 and 25 characters');
 
-        return;
-    }
+                return;
+            }
 
-    const isValidChannel = await checkIfChannelExists(channelInput.value);
+            if (nameInput.value.length < 4 || nameInput.value.length > 25) {
+                alert('The name needs to have between 4 and 25 characters');
 
-    if (!isValidChannel) {
-        alert('The channel does not exist !');
+                return;
+            }
+        }
+        const isValidChannel = await checkIfChannelExists(channelInput.value);
 
-        return;
-    }
+        if (!isValidChannel) {
+            alert('The channel does not exist !');
 
-    alert('Extension activated successfully !');
+            return;
+        }
 
-    await chrome.storage.local.set({
-        name: nameInput.value,
-        channel: channelInput.value,
-        nickAbbreviation: nickAbbreviationInput.value,
-    });
+        alert('Extension activated successfully !');
 
-    chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
-        await chrome.tabs.sendMessage(tabs[0].id, {
-            channel: channelInput.value,
+        await chrome.storage.local.set({
             name: nameInput.value,
-            nickAbbreviation: nickAbbreviationInput.value ?? undefined,
+            channel: channelInput.value,
+            nickAbbreviation: nickAbbreviationInput.value,
         });
+
+        chrome.tabs.query(
+            { active: true, currentWindow: true },
+            async (tabs) => {
+                await chrome.tabs.sendMessage(tabs[0].id, {
+                    channel: channelInput.value,
+                    name: nameInput.value,
+                    nickAbbreviation: nickAbbreviationInput.value ?? undefined,
+                });
+            },
+        );
     });
-});
+}
+
+main();
