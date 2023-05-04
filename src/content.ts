@@ -26,11 +26,17 @@ async function main() {
 
     const tmiClient = new Client({ channels: [channelInput] });
 
+    // Prevent the extension from try to leave a channel after it was already left
+    let isConnectedChannel = false;
+
     chrome.runtime.onMessage.addListener(async (request) => {
         const { name, channel, nickAbbreviation } = request;
 
-        if (tmiConnected && channelInput) {
+        if (tmiConnected && channelInput && !isConnectedChannel) {
+            isConnectedChannel = true;
             await tmiClient.part(channelInput);
+            await new Promise((resolve) => setTimeout(resolve, 500));
+            isConnectedChannel = false;
         }
 
         nameInput = name;
