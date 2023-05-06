@@ -47,3 +47,51 @@ body {
     cursor: pointer;
   }
   
+  .toggle-switch {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 50px;
+    height: 24px;
+  }
+  
+  .toggle-switch input[type="checkbox"] {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+  
+  .toggle-switch label {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    border-radius: 15px;
+    cursor: pointer;
+    transition: background-color 0.2s ease-in-out;
+  }
+  
+  .toggle-switch label:after {
+    content: "";
+    position: absolute;
+    top: 0px;
+    left: 2px;
+    width: 24px;
+    height: 24px;
+    background-color: #fff;
+    border-radius: 50%;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s ease-in-out;
+}
+  
+  .toggle-switch input[type="checkbox"]:checked + label {
+    background-color: #a5d6a7;
+  }
+  
+  .toggle-switch input[type="checkbox"]:checked + label:after {
+    background-color: #4caf50;
+    transform: translateX(26px);
+  }
+  
