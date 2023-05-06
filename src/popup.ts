@@ -6,6 +6,52 @@ const nickAbbreviationInput = document.getElementById(
     'nick-abbreviation',
 ) as HTMLInputElement;
 const button = document.getElementById('button');
+const toggleButton = document.getElementById('toggle') as HTMLInputElement;
+let buttonClickEvent: () => Promise<void>;
+
+async function extensionEnabledOrNot() {
+    const { isExtensionEnabled } = await chrome.storage.local.get(
+        'isExtensionEnabled',
+    );
+
+    if (isExtensionEnabled) {
+        toggleButton.checked = true;
+        await main();
+    }
+
+    toggleButton.addEventListener('change', async () => {
+        const isExtensionEnabled = toggleButton.checked;
+
+        if (isExtensionEnabled) {
+            await main();
+
+            await chrome.storage.local.set({
+                isExtensionEnabled: true,
+            });
+        } else {
+            nameInput.value = '';
+            channelInput.value = '';
+            nickAbbreviationInput.value = '';
+
+            await chrome.storage.local.set({
+                isExtensionEnabled: false,
+            });
+
+            button.removeEventListener('click', buttonClickEvent);
+        }
+
+        chrome.tabs.query(
+            { active: true, currentWindow: true },
+            async (tabs) => {
+                await chrome.tabs.sendMessage(tabs[0].id, {
+                    isExtensionEnabled,
+                });
+            },
+        );
+    });
+}
+
+extensionEnabledOrNot();
 
 async function main() {
     const { name, channel, nickAbbreviation } = await chrome.storage.local.get([
@@ -27,8 +73,8 @@ async function main() {
         }
     }
 
-    button.addEventListener('click', async () => {
-        if (!name || !channel || !nickAbbreviation) {
+    return await new Promise<void>((resolve) => {
+        buttonClickEvent = async () => {
             if (
                 channelInput.value.length < 4 ||
                 channelInput.value.length > 25
@@ -43,34 +89,40 @@ async function main() {
 
                 return;
             }
-        }
-        const isValidChannel = await checkIfChannelExists(channelInput.value);
 
-        if (!isValidChannel) {
-            alert('The channel does not exist !');
+            const isValidChannel = await checkIfChannelExists(
+                channelInput.value,
+            );
 
-            return;
-        }
+            if (!isValidChannel) {
+                alert('The channel does not exist !');
 
-        alert('Extension activated successfully !');
+                return;
+            }
 
-        await chrome.storage.local.set({
-            name: nameInput.value,
-            channel: channelInput.value,
-            nickAbbreviation: nickAbbreviationInput.value,
-        });
+            alert('Extension activated successfully !');
 
-        chrome.tabs.query(
-            { active: true, currentWindow: true },
-            async (tabs) => {
-                await chrome.tabs.sendMessage(tabs[0].id, {
-                    channel: channelInput.value,
-                    name: nameInput.value,
-                    nickAbbreviation: nickAbbreviationInput.value ?? undefined,
-                });
-            },
-        );
+            await chrome.storage.local.set({
+                name: nameInput.value,
+                channel: channelInput.value,
+                nickAbbreviation: nickAbbreviationInput.value,
+            });
+
+            chrome.tabs.query(
+                { active: true, currentWindow: true },
+                async (tabs) => {
+                    await chrome.tabs.sendMessage(tabs[0].id, {
+                        channel: channelInput.value,
+                        name: nameInput.value,
+                        nickAbbreviation:
+                            nickAbbreviationInput.value ?? undefined,
+                    });
+                },
+            );
+        };
+
+        button.addEventListener('click', buttonClickEvent);
+
+        resolve();
     });
 }
-
-main();
