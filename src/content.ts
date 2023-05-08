@@ -5,34 +5,63 @@ import { createNickAbbreviationInputArray } from './utils/create-nick-abbreviati
 
 console.log('Twitch Mention Notifier is enabled');
 
-async function main() {
-    let nameInput: string;
-    let channelInput: string;
-    let nickAbbreviationInput: string;
-    let nickAbbreviationInputArray: string[] = [];
-    let tmiConnected: [string, number] | undefined = undefined;
+let nameInput: string;
+let channelInput: string;
+let nickAbbreviationInput: string;
+let nickAbbreviationInputArray: string[] = [];
+let tmiConnected: [string, number] | undefined = undefined;
+let extensionEnabled = false;
+let extensionActivationInProgress = false;
+let isConnectedChannel = false; // Prevent the extension from try to leave a channel after it was already left
+let tmiClient: Client;
 
-    await new Promise((resolve) =>
-        chrome.storage.local.get((result) => {
-            const { name, channel, nickAbbreviation } = result;
+chrome.runtime.onMessage.addListener(async (request) => {
+    const { startButtonClicked, isExtensionEnabledEvent } = request;
 
-            nameInput = name;
-            channelInput = channel;
-            nickAbbreviationInput = nickAbbreviation;
+    if (isExtensionEnabledEvent === true) {
+        await startFunction();
 
-            resolve([name, channel, nickAbbreviation]);
-        }),
-    );
+        if (!tmiClient) {
+            extensionActivationInProgress = true;
+            await main();
+            extensionActivationInProgress = false;
+        }
 
-    const tmiClient = new Client({ channels: [channelInput] });
+        extensionEnabled = true;
 
-    // Prevent the extension from try to leave a channel after it was already left
-    let isConnectedChannel = false;
+        return;
+    }
 
-    chrome.runtime.onMessage.addListener(async (request) => {
-        const { name, channel, nickAbbreviation } = request;
+    if (isExtensionEnabledEvent === false) {
+        if (extensionActivationInProgress) {
+            await new Promise<void>((resolve) =>
+                setTimeout(() => {
+                    extensionEnabled = false;
+                    resolve();
+                }, 2000),
+            );
+        }
+
+        extensionEnabled = false;
+
+        return;
+    }
+
+    if (startButtonClicked && extensionEnabled) {
+        const { name, channel, nickAbbreviation } = startButtonClicked;
+
+        // Fazer um pro nickAbbreviation tb !!!!!
+        if (name && nameInput && channel && channelInput) {
+            if (channel === channelInput && name === nameInput) {
+                // TALVEZ Mandar uma mensagem para fazer um alert() no popup.ts...
+                console.log('MESMO CANAL');
+
+                return;
+            }
+        }
 
         if (tmiConnected && channelInput && !isConnectedChannel) {
+            console.log('TROCANDO DE CANAL...');
             isConnectedChannel = true;
             await tmiClient.part(channelInput);
             await new Promise((resolve) => setTimeout(resolve, 500));
@@ -41,16 +70,33 @@ async function main() {
 
         nameInput = name;
         channelInput = channel;
-
         nickAbbreviationInput = nickAbbreviation;
-        nickAbbreviationInputArray = createNickAbbreviationInputArray(
-            nickAbbreviationInput,
-        );
+
+        if (nickAbbreviationInput) {
+            nickAbbreviationInputArray = createNickAbbreviationInputArray(
+                nickAbbreviationInput,
+            );
+        }
 
         if (tmiConnected) {
             await tmiClient.join(channelInput);
         }
-    });
+
+        return;
+    }
+});
+
+// MUDAR o nome disso para seilá, recuperar os dados do storage (EM INGLÊS) algo assim...
+async function startFunction() {
+    const { name, channel, nickAbbreviation } = await chrome.storage.local.get([
+        'name',
+        'channel',
+        'nickAbbreviation',
+    ]);
+
+    nameInput = name;
+    channelInput = channel;
+    nickAbbreviationInput = nickAbbreviation;
 
     // Separate by comma in an array, remove spaces and empty strings
     if (nickAbbreviationInput) {
@@ -58,6 +104,10 @@ async function main() {
             nickAbbreviationInput,
         );
     }
+}
+
+async function main() {
+    tmiClient = new Client({ channels: [channelInput] });
 
     tmiConnected = await tmiClient.connect();
 
@@ -69,6 +119,10 @@ async function main() {
             message: string,
             self: boolean,
         ) => {
+            if (!extensionEnabled) {
+                return;
+            }
+
             if (nameInput) {
                 let badge = '';
 
@@ -128,4 +182,12 @@ async function main() {
     );
 }
 
-main();
+chrome.storage.local.get('isExtensionEnabledEvent', async (request) => {
+    const { isExtensionEnabledEvent } = request;
+
+    if (isExtensionEnabledEvent === true) {
+        await startFunction();
+        await main();
+        extensionEnabled = true;
+    }
+});
