@@ -17,9 +17,9 @@ let tmiClient: Client;
 
 // MUDAR o nome de startFunction para algo mais declarativo !!!!
 chrome.runtime.onMessage.addListener(async (request) => {
-    const { startButtonClicked, isExtensionEnabledEvent } = request;
+    const { startButtonClicked, isExtensionEnabledPopup } = request;
 
-    if (isExtensionEnabledEvent === true) {
+    if (isExtensionEnabledPopup === true) {
         await startFunction();
 
         if (!tmiClient) {
@@ -33,7 +33,7 @@ chrome.runtime.onMessage.addListener(async (request) => {
         return;
     }
 
-    if (isExtensionEnabledEvent === false) {
+    if (isExtensionEnabledPopup === false) {
         if (extensionActivationInProgress) {
             await new Promise<void>((resolve) =>
                 setTimeout(() => {
@@ -49,21 +49,25 @@ chrome.runtime.onMessage.addListener(async (request) => {
     }
 
     if (startButtonClicked && extensionEnabled) {
-        const { name, channel, nickAbbreviation } = startButtonClicked;
+        const {
+            nameSavedPopup,
+            channelSavedPopup,
+            nickAbbreviationSavedPopup,
+        } = startButtonClicked;
 
         // Prevent the user from trying to connect with the same inputs
         if (
-            name &&
+            nameSavedPopup &&
             nameInput &&
-            channel &&
+            channelSavedPopup &&
             channelInput &&
-            nickAbbreviation &&
+            nickAbbreviationSavedPopup &&
             nickAbbreviationInput
         ) {
             if (
-                channel === channelInput &&
-                name === nameInput &&
-                nickAbbreviation === nickAbbreviationInput
+                channelSavedPopup === channelInput &&
+                nameSavedPopup === nameInput &&
+                nickAbbreviationSavedPopup === nickAbbreviationInput
             ) {
                 await chrome.runtime.sendMessage({ sameData: true });
 
@@ -71,11 +75,11 @@ chrome.runtime.onMessage.addListener(async (request) => {
             }
         }
 
-        if (name && nameInput && channel && channelInput) {
+        if (nameSavedPopup && nameInput && channelSavedPopup && channelInput) {
             if (
-                channel === channelInput &&
-                name === nameInput &&
-                !nickAbbreviation &&
+                channelSavedPopup === channelInput &&
+                nameSavedPopup === nameInput &&
+                !nickAbbreviationSavedPopup &&
                 !nickAbbreviationInput
             ) {
                 await chrome.runtime.sendMessage({ sameData: true });
@@ -83,11 +87,11 @@ chrome.runtime.onMessage.addListener(async (request) => {
                 return;
             }
 
-            if (nickAbbreviation && nickAbbreviationInput) {
+            if (nickAbbreviationSavedPopup && nickAbbreviationInput) {
                 if (
-                    nickAbbreviation === nickAbbreviationInput &&
-                    name === nameInput &&
-                    channel === channelInput
+                    nickAbbreviationSavedPopup === nickAbbreviationInput &&
+                    nameSavedPopup === nameInput &&
+                    channelSavedPopup === channelInput
                 ) {
                     await chrome.runtime.sendMessage({ sameData: true });
 
@@ -103,9 +107,9 @@ chrome.runtime.onMessage.addListener(async (request) => {
             isConnectedChannel = false;
         }
 
-        nameInput = name;
-        channelInput = channel;
-        nickAbbreviationInput = nickAbbreviation;
+        nameInput = nameSavedPopup;
+        channelInput = channelSavedPopup;
+        nickAbbreviationInput = nickAbbreviationSavedPopup;
 
         if (nickAbbreviationInput) {
             nickAbbreviationInputArray = createNickAbbreviationInputArray(
@@ -125,15 +129,16 @@ chrome.runtime.onMessage.addListener(async (request) => {
 
 // MUDAR o nome disso para seilá, recuperar os dados do storage (EM INGLÊS) algo assim...
 async function startFunction() {
-    const { name, channel, nickAbbreviation } = await chrome.storage.local.get([
-        'name',
-        'channel',
-        'nickAbbreviation',
-    ]);
+    const { nameSavedPopup, channelSavedPopup, nickAbbreviationSavedPopup } =
+        await chrome.storage.local.get([
+            'nameSavedPopup',
+            'channelSavedPopup',
+            'nickAbbreviationSavedPopup',
+        ]);
 
-    nameInput = name;
-    channelInput = channel;
-    nickAbbreviationInput = nickAbbreviation;
+    nameInput = nameSavedPopup;
+    channelInput = channelSavedPopup;
+    nickAbbreviationInput = nickAbbreviationSavedPopup;
 
     // Separate by comma in an array, remove spaces and empty strings
     if (nickAbbreviationInput) {
@@ -219,10 +224,10 @@ async function main() {
     );
 }
 
-chrome.storage.local.get('isExtensionEnabledEvent', async (request) => {
-    const { isExtensionEnabledEvent } = request;
+chrome.storage.local.get('isExtensionEnabledPopup', async (request) => {
+    const { isExtensionEnabledPopup } = request;
 
-    if (isExtensionEnabledEvent === true) {
+    if (isExtensionEnabledPopup === true) {
         await startFunction();
         await main();
         extensionEnabled = true;

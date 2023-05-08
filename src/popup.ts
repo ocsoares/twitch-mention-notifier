@@ -20,23 +20,23 @@ chrome.runtime.onMessage.addListener(async (request) => {
 });
 
 async function extensionEnabledOrNot() {
-    const { isExtensionEnabledEvent } = await chrome.storage.local.get(
-        'isExtensionEnabledEvent',
+    const { isExtensionEnabledPopup } = await chrome.storage.local.get(
+        'isExtensionEnabledPopup',
     );
 
-    if (isExtensionEnabledEvent) {
+    if (isExtensionEnabledPopup) {
         toggleButton.checked = true;
         await main();
     }
 
     toggleButton.addEventListener('change', async () => {
-        const isExtensionEnabledEvent = toggleButton.checked;
+        const isExtensionEnabledPopup = toggleButton.checked;
 
-        if (isExtensionEnabledEvent) {
+        if (isExtensionEnabledPopup) {
             await main();
 
             await chrome.storage.local.set({
-                isExtensionEnabledEvent: true,
+                isExtensionEnabledPopup: true,
             });
         } else {
             nameInput.value = '';
@@ -44,7 +44,7 @@ async function extensionEnabledOrNot() {
             nickAbbreviationInput.value = '';
 
             await chrome.storage.local.set({
-                isExtensionEnabledEvent: false,
+                isExtensionEnabledPopup: false,
             });
 
             button.removeEventListener('click', buttonClickEvent);
@@ -54,7 +54,7 @@ async function extensionEnabledOrNot() {
             { active: true, currentWindow: true },
             async (tabs) => {
                 await chrome.tabs.sendMessage(tabs[0].id, {
-                    isExtensionEnabledEvent,
+                    isExtensionEnabledPopup,
                 });
             },
         );
@@ -64,22 +64,23 @@ async function extensionEnabledOrNot() {
 extensionEnabledOrNot();
 
 async function main() {
-    const { name, channel, nickAbbreviation } = await chrome.storage.local.get([
-        'name',
-        'channel',
-        'nickAbbreviation',
-    ]);
+    const { nameSavedPopup, channelSavedPopup, nickAbbreviationSavedPopup } =
+        await chrome.storage.local.get([
+            'nameSavedPopup',
+            'channelSavedPopup',
+            'nickAbbreviationSavedPopup',
+        ]);
 
     nameInput.value = '';
     channelInput.value = '';
     nickAbbreviationInput.value = '';
 
-    if (name && channel) {
-        nameInput.value = name;
-        channelInput.value = channel;
+    if (nameSavedPopup && channelSavedPopup) {
+        nameInput.value = nameSavedPopup;
+        channelInput.value = channelSavedPopup;
 
-        if (nickAbbreviation) {
-            nickAbbreviationInput.value = nickAbbreviation;
+        if (nickAbbreviationSavedPopup) {
+            nickAbbreviationInput.value = nickAbbreviationSavedPopup;
         }
     }
 
@@ -113,9 +114,9 @@ async function main() {
             alert('Extension activated successfully !');
 
             await chrome.storage.local.set({
-                name: nameInput.value,
-                channel: channelInput.value,
-                nickAbbreviation: nickAbbreviationInput.value,
+                nameSavedPopup: nameInput.value,
+                channelSavedPopup: channelInput.value,
+                nickAbbreviationSavedPopup: nickAbbreviationInput.value,
             });
 
             chrome.tabs.query(
@@ -123,9 +124,9 @@ async function main() {
                 async (tabs) => {
                     await chrome.tabs.sendMessage(tabs[0].id, {
                         startButtonClicked: {
-                            channel: channelInput.value,
-                            name: nameInput.value,
-                            nickAbbreviation:
+                            channelSavedPopup: channelInput.value,
+                            nameSavedPopup: nameInput.value,
+                            nickAbbreviationSavedPopup:
                                 nickAbbreviationInput.value ?? undefined,
                         },
                     });
