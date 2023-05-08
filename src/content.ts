@@ -15,6 +15,7 @@ let extensionActivationInProgress = false;
 let isConnectedChannel = false; // Prevent the extension from try to leave a channel after it was already left
 let tmiClient: Client;
 
+// MUDAR o nome de startFunction para algo mais declarativo !!!!
 chrome.runtime.onMessage.addListener(async (request) => {
     const { startButtonClicked, isExtensionEnabledEvent } = request;
 
@@ -50,18 +51,52 @@ chrome.runtime.onMessage.addListener(async (request) => {
     if (startButtonClicked && extensionEnabled) {
         const { name, channel, nickAbbreviation } = startButtonClicked;
 
-        // Fazer um pro nickAbbreviation tb !!!!!
-        if (name && nameInput && channel && channelInput) {
-            if (channel === channelInput && name === nameInput) {
-                // TALVEZ Mandar uma mensagem para fazer um alert() no popup.ts...
-                console.log('MESMO CANAL');
+        // Prevent the user from trying to connect with the same inputs
+        if (
+            name &&
+            nameInput &&
+            channel &&
+            channelInput &&
+            nickAbbreviation &&
+            nickAbbreviationInput
+        ) {
+            if (
+                channel === channelInput &&
+                name === nameInput &&
+                nickAbbreviation === nickAbbreviationInput
+            ) {
+                await chrome.runtime.sendMessage({ sameData: true });
 
                 return;
             }
         }
 
+        if (name && nameInput && channel && channelInput) {
+            if (
+                channel === channelInput &&
+                name === nameInput &&
+                !nickAbbreviation &&
+                !nickAbbreviationInput
+            ) {
+                await chrome.runtime.sendMessage({ sameData: true });
+
+                return;
+            }
+
+            if (nickAbbreviation && nickAbbreviationInput) {
+                if (
+                    nickAbbreviation === nickAbbreviationInput &&
+                    name === nameInput &&
+                    channel === channelInput
+                ) {
+                    await chrome.runtime.sendMessage({ sameData: true });
+
+                    return;
+                }
+            }
+        }
+
         if (tmiConnected && channelInput && !isConnectedChannel) {
-            console.log('TROCANDO DE CANAL...');
             isConnectedChannel = true;
             await tmiClient.part(channelInput);
             await new Promise((resolve) => setTimeout(resolve, 500));

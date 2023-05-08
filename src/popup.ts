@@ -9,6 +9,16 @@ const button = document.getElementById('button');
 const toggleButton = document.getElementById('toggle') as HTMLInputElement;
 let buttonClickEvent: () => Promise<void>;
 
+chrome.runtime.onMessage.addListener(async (request) => {
+    const { sameData } = request;
+
+    if (sameData) {
+        alert('You are already connected with this data !');
+
+        return;
+    }
+});
+
 async function extensionEnabledOrNot() {
     const { isExtensionEnabledEvent } = await chrome.storage.local.get(
         'isExtensionEnabledEvent',
