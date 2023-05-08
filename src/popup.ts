@@ -10,23 +10,23 @@ const toggleButton = document.getElementById('toggle') as HTMLInputElement;
 let buttonClickEvent: () => Promise<void>;
 
 async function extensionEnabledOrNot() {
-    const { isExtensionEnabled } = await chrome.storage.local.get(
-        'isExtensionEnabled',
+    const { isExtensionEnabledEvent } = await chrome.storage.local.get(
+        'isExtensionEnabledEvent',
     );
 
-    if (isExtensionEnabled) {
+    if (isExtensionEnabledEvent) {
         toggleButton.checked = true;
         await main();
     }
 
     toggleButton.addEventListener('change', async () => {
-        const isExtensionEnabled = toggleButton.checked;
+        const isExtensionEnabledEvent = toggleButton.checked;
 
-        if (isExtensionEnabled) {
+        if (isExtensionEnabledEvent) {
             await main();
 
             await chrome.storage.local.set({
-                isExtensionEnabled: true,
+                isExtensionEnabledEvent: true,
             });
         } else {
             nameInput.value = '';
@@ -34,7 +34,7 @@ async function extensionEnabledOrNot() {
             nickAbbreviationInput.value = '';
 
             await chrome.storage.local.set({
-                isExtensionEnabled: false,
+                isExtensionEnabledEvent: false,
             });
 
             button.removeEventListener('click', buttonClickEvent);
@@ -44,7 +44,7 @@ async function extensionEnabledOrNot() {
             { active: true, currentWindow: true },
             async (tabs) => {
                 await chrome.tabs.sendMessage(tabs[0].id, {
-                    isExtensionEnabled,
+                    isExtensionEnabledEvent,
                 });
             },
         );
@@ -112,10 +112,12 @@ async function main() {
                 { active: true, currentWindow: true },
                 async (tabs) => {
                     await chrome.tabs.sendMessage(tabs[0].id, {
-                        channel: channelInput.value,
-                        name: nameInput.value,
-                        nickAbbreviation:
-                            nickAbbreviationInput.value ?? undefined,
+                        startButtonClicked: {
+                            channel: channelInput.value,
+                            name: nameInput.value,
+                            nickAbbreviation:
+                                nickAbbreviationInput.value ?? undefined,
+                        },
                     });
                 },
             );
