@@ -111,6 +111,8 @@ chrome.runtime.onMessage.addListener(async (request) => {
             nickAbbreviationInputArray = createNickAbbreviationInputArray(
                 nickAbbreviationInput,
             );
+        } else {
+            nickAbbreviationInputArray = [];
         }
 
         if (tmiConnected) {
