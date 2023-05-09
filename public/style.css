@@ -2,10 +2,10 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    background-color: #5c527f; /*cor de fundo*/
+    background-color: #5c527f;
     font-family: Arial, sans-serif;
     font-size: 16px;
-    color: #f2e9e4; /*cor da fonte*/
+    color: #f2e9e4;
     height: 100%;
     width: 100%;
     margin: 0;
@@ -18,7 +18,7 @@ body {
     justify-content: center;
     height: 80%;
     width: 80%;
-    background-color: #D0BDF4; /*cor de fundo*/
+    background-color: #D0BDF4;
     border-radius: 5px;
     padding: 30px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
@@ -28,23 +28,29 @@ body {
     font-size: 36px;
     font-weight: bold;
     margin: 0 0 50px;
-    color: #5c527f; /*cor da fonte*/
+    color: #5c527f;
   }
   
   p {
     font-size: 18px;
     margin: 0 0 30px;
-    color: #5c527f; /*cor da fonte*/
+    color: #5c527f;
   }
   
   button {
     padding: 10px 20px;
-    background-color: #5c527f; /*cor de fundo*/
-    color: #f2e9e4; /*cor da fonte*/
+    background-color: #5c527f;
+    color: #f2e9e4;
     font-size: 18px;
     border: none;
     border-radius: 5px;
     cursor: pointer;
+  }
+
+  button.disabled {
+    background-color: #777;
+    color: rgba(242, 233, 228, 0.5);
+    cursor: not-allowed;
   }
   
   .toggle-switch {

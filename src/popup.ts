@@ -5,7 +5,7 @@ const nameInput = document.getElementById('name') as HTMLInputElement;
 const nickAbbreviationInput = document.getElementById(
     'nick-abbreviation',
 ) as HTMLInputElement;
-const button = document.getElementById('button');
+const startButton = document.getElementById('start-button');
 const toggleButton = document.getElementById('toggle') as HTMLInputElement;
 let buttonClickEvent: () => Promise<void>;
 
@@ -27,6 +27,8 @@ async function extensionEnabledOrNot() {
     if (isExtensionEnabledPopup) {
         toggleButton.checked = true;
         await main();
+    } else {
+        startButton.classList.add('disabled');
     }
 
     toggleButton.addEventListener('change', async () => {
@@ -38,6 +40,8 @@ async function extensionEnabledOrNot() {
             await chrome.storage.local.set({
                 isExtensionEnabledPopup: true,
             });
+
+            startButton.classList.remove('disabled');
         } else {
             nameInput.value = '';
             channelInput.value = '';
@@ -47,7 +51,9 @@ async function extensionEnabledOrNot() {
                 isExtensionEnabledPopup: false,
             });
 
-            button.removeEventListener('click', buttonClickEvent);
+            startButton.classList.add('disabled');
+
+            startButton.removeEventListener('click', buttonClickEvent);
         }
 
         chrome.tabs.query(
@@ -134,7 +140,7 @@ async function main() {
             );
         };
 
-        button.addEventListener('click', buttonClickEvent);
+        startButton.addEventListener('click', buttonClickEvent);
 
         resolve();
     });
