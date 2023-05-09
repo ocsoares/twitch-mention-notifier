@@ -15,12 +15,11 @@ let extensionActivationInProgress = false;
 let isConnectedChannel = false; // Prevent the extension from try to leave a channel after it was already left
 let tmiClient: Client;
 
-// MUDAR o nome de startFunction para algo mais declarativo !!!!
 chrome.runtime.onMessage.addListener(async (request) => {
     const { startButtonClicked, isExtensionEnabledPopup } = request;
 
     if (isExtensionEnabledPopup === true) {
-        await startFunction();
+        await getSavedPopupData();
 
         if (!tmiClient) {
             extensionActivationInProgress = true;
@@ -127,8 +126,7 @@ chrome.runtime.onMessage.addListener(async (request) => {
     }
 });
 
-// MUDAR o nome disso para seilá, recuperar os dados do storage (EM INGLÊS) algo assim...
-async function startFunction() {
+async function getSavedPopupData() {
     const { nameSavedPopup, channelSavedPopup, nickAbbreviationSavedPopup } =
         await chrome.storage.local.get([
             'nameSavedPopup',
@@ -228,7 +226,7 @@ chrome.storage.local.get('isExtensionEnabledPopup', async (request) => {
     const { isExtensionEnabledPopup } = request;
 
     if (isExtensionEnabledPopup === true) {
-        await startFunction();
+        await getSavedPopupData();
         await main();
         extensionEnabled = true;
     }
