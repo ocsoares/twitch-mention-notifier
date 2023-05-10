@@ -41,7 +41,7 @@ chrome.runtime.onConnect.addListener((port) => {
                         chrome.notifications.create(
                             {
                                 type: 'basic',
-                                iconUrl: 'icons/mentioned-icon_16.png',
+                                iconUrl: 'icons/twitch-icon_48.png',
                                 title: 'Twitch Mention Notifier',
                                 message: `You were mentioned by ${badge}${mentionedBy} in channel "${mentionedInChannel}" !`,
                                 buttons: [
