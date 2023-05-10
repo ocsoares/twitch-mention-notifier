@@ -7,6 +7,7 @@ const nickAbbreviationInput = document.getElementById(
 ) as HTMLInputElement;
 const startButton = document.getElementById('start-button');
 const toggleButton = document.getElementById('toggle') as HTMLInputElement;
+const toggleText = document.getElementById('toggle-text');
 let buttonClickEvent: () => Promise<void>;
 
 chrome.runtime.onMessage.addListener(async (request) => {
@@ -29,6 +30,14 @@ async function changeExtensionIconEnabledOrDisabled(enabled: boolean) {
     }
 }
 
+function changeToggleTextIfEnabledOrDisabled(enabled: boolean) {
+    if (enabled) {
+        toggleText.textContent = 'Enabled';
+    } else {
+        toggleText.textContent = 'Disabled';
+    }
+}
+
 async function extensionEnabledOrNot() {
     const { isExtensionEnabledPopup } = await chrome.storage.local.get(
         'isExtensionEnabledPopup',
@@ -39,9 +48,11 @@ async function extensionEnabledOrNot() {
         await main();
 
         await changeExtensionIconEnabledOrDisabled(true);
+        changeToggleTextIfEnabledOrDisabled(true);
     } else {
         startButton.classList.add('disabled');
         await changeExtensionIconEnabledOrDisabled(false);
+        changeToggleTextIfEnabledOrDisabled(false);
     }
 
     toggleButton.addEventListener('change', async () => {
@@ -56,6 +67,7 @@ async function extensionEnabledOrNot() {
 
             startButton.classList.remove('disabled');
             await changeExtensionIconEnabledOrDisabled(true);
+            changeToggleTextIfEnabledOrDisabled(true);
         } else {
             nameInput.value = '';
             channelInput.value = '';
@@ -67,6 +79,7 @@ async function extensionEnabledOrNot() {
 
             startButton.classList.add('disabled');
             await changeExtensionIconEnabledOrDisabled(false);
+            changeToggleTextIfEnabledOrDisabled(false);
 
             startButton.removeEventListener('click', buttonClickEvent);
         }

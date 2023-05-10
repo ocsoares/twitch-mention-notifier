@@ -10,14 +10,17 @@
   <div class="container">
     <h1>Twitch Mention Notifier</h1>
     <p>Please fill in the data correctly to start the notifications</p>
-    <input type="text" id="channel" placeholder="Insert channel name">
-    <input type="text" id="name" placeholder="Insert your name">
-    <input type="text" id="nick-abbreviation" placeholder="Your nickname abbreviations, separated by commma">
-    <button id="start-button">Start notifications</button>
+    <div class="divider"></div>
     <div class="toggle-switch">
         <input type="checkbox" id="toggle" />
         <label for="toggle"></label>
+        <span class="toggle-class" id="toggle-text"></span>
     </div>
+    <div class="divider"></div>
+    <input type="text" id="channel" placeholder="Insert channel name">
+    <input type="text" id="name" placeholder="Insert your name">
+    <input type="text" id="nick-abbreviation" placeholder="Your nickname abbreviations, separated by comma">
+    <button id="start-button">Start notifications</button>
   </div>
   <script src="popup.js"></script>
 </body>
