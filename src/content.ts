@@ -11,7 +11,7 @@ let nickAbbreviationInput: string;
 let nickAbbreviationInputArray: string[] = [];
 let tmiConnected: [string, number] | undefined = undefined;
 let extensionEnabled = false;
-let extensionActivationInProgress = false;
+let extensionActivationInProgress = false; // Prevent the main() function from stay activated if disable the extension quickly
 let isConnectedChannel = false; // Prevent the extension from try to leave a channel after it was already left
 let tmiClient: Client;
 
