@@ -116,12 +116,6 @@ async function main() {
                 return;
             }
 
-            if (nameInput.value.length < 4 || nameInput.value.length > 25) {
-                alert('The name needs to have between 4 and 25 characters');
-
-                return;
-            }
-
             const isValidChannel = await checkIfChannelExists(
                 channelInput.value,
             );
@@ -134,6 +128,26 @@ async function main() {
 
             if (isValidChannel === false) {
                 alert('The channel does not exist !');
+
+                return;
+            }
+
+            if (nameInput.value.length < 4 || nameInput.value.length > 25) {
+                alert('The name needs to have between 4 and 25 characters');
+
+                return;
+            }
+
+            const isValidName = await checkIfChannelExists(nameInput.value);
+
+            if (isValidName === undefined) {
+                alert('An error occurred, try again later !');
+
+                return;
+            }
+
+            if (isValidName === false) {
+                alert('The name does not exist !');
 
                 return;
             }
