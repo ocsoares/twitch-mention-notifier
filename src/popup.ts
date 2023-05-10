@@ -126,7 +126,13 @@ async function main() {
                 channelInput.value,
             );
 
-            if (!isValidChannel) {
+            if (isValidChannel === undefined) {
+                alert('An error occurred, try again later !');
+
+                return;
+            }
+
+            if (isValidChannel === false) {
                 alert('The channel does not exist !');
 
                 return;
