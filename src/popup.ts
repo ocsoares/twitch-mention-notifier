@@ -19,6 +19,16 @@ chrome.runtime.onMessage.addListener(async (request) => {
     }
 });
 
+async function changeExtensionIconEnabledOrDisabled(enabled: boolean) {
+    if (enabled) {
+        await chrome.action.setIcon({ path: 'icons/twitch-icon_32.png' });
+    } else {
+        await chrome.action.setIcon({
+            path: 'icons/twitch-icon-disabled_32.png',
+        });
+    }
+}
+
 async function extensionEnabledOrNot() {
     const { isExtensionEnabledPopup } = await chrome.storage.local.get(
         'isExtensionEnabledPopup',
@@ -27,8 +37,11 @@ async function extensionEnabledOrNot() {
     if (isExtensionEnabledPopup) {
         toggleButton.checked = true;
         await main();
+
+        await changeExtensionIconEnabledOrDisabled(true);
     } else {
         startButton.classList.add('disabled');
+        await changeExtensionIconEnabledOrDisabled(false);
     }
 
     toggleButton.addEventListener('change', async () => {
@@ -42,6 +55,7 @@ async function extensionEnabledOrNot() {
             });
 
             startButton.classList.remove('disabled');
+            await changeExtensionIconEnabledOrDisabled(true);
         } else {
             nameInput.value = '';
             channelInput.value = '';
@@ -52,6 +66,7 @@ async function extensionEnabledOrNot() {
             });
 
             startButton.classList.add('disabled');
+            await changeExtensionIconEnabledOrDisabled(false);
 
             startButton.removeEventListener('click', buttonClickEvent);
         }
