@@ -2,6 +2,7 @@
 
 import { Client, ChatUserstate } from 'tmi.js';
 import { createNickAbbreviationInputArray } from './utils/create-nick-abbreviation-input-array.util';
+import { enableOrDisableExtensionAndChangeChannelEvent } from './events/enable-or-disable-extension-and-change-channel.event';
 
 console.log('Twitch Mention Notifier is enabled');
 
@@ -11,120 +12,23 @@ let nickAbbreviationInput: string;
 let nickAbbreviationInputArray: string[] = [];
 let tmiConnected: [string, number] | undefined = undefined;
 let extensionEnabled = false;
-let extensionActivationInProgress = false; // Prevent the main() function from stay activated if disable the extension quickly
-let isConnectedChannel = false; // Prevent the extension from try to leave a channel after it was already left
+const extensionActivationInProgress = false; // Prevent the main() function from stay activated if disable the extension quickly
+const isConnectedChannel = false; // Prevent the extension from try to leave a channel after it was already left
 let tmiClient: Client;
 
-chrome.runtime.onMessage.addListener(async (request) => {
-    const { startButtonClicked, isExtensionEnabledPopup } = request;
-
-    if (isExtensionEnabledPopup === true) {
-        await getSavedPopupData();
-
-        if (!tmiClient) {
-            extensionActivationInProgress = true;
-            await main();
-            extensionActivationInProgress = false;
-        }
-
-        extensionEnabled = true;
-
-        return;
-    }
-
-    if (isExtensionEnabledPopup === false) {
-        if (extensionActivationInProgress) {
-            await new Promise<void>((resolve) =>
-                setTimeout(() => {
-                    extensionEnabled = false;
-                    resolve();
-                }, 2000),
-            );
-        }
-
-        extensionEnabled = false;
-
-        return;
-    }
-
-    if (startButtonClicked && extensionEnabled) {
-        const {
-            nameSavedPopup,
-            channelSavedPopup,
-            nickAbbreviationSavedPopup,
-        } = startButtonClicked;
-
-        // Prevent the user from trying to connect with the same inputs
-        if (
-            nameSavedPopup &&
-            nameInput &&
-            channelSavedPopup &&
-            channelInput &&
-            nickAbbreviationSavedPopup &&
-            nickAbbreviationInput
-        ) {
-            if (
-                channelSavedPopup === channelInput &&
-                nameSavedPopup === nameInput &&
-                nickAbbreviationSavedPopup === nickAbbreviationInput
-            ) {
-                await chrome.runtime.sendMessage({ sameData: true });
-
-                return;
-            }
-        }
-
-        if (nameSavedPopup && nameInput && channelSavedPopup && channelInput) {
-            if (
-                channelSavedPopup === channelInput &&
-                nameSavedPopup === nameInput &&
-                !nickAbbreviationSavedPopup &&
-                !nickAbbreviationInput
-            ) {
-                await chrome.runtime.sendMessage({ sameData: true });
-
-                return;
-            }
-
-            if (nickAbbreviationSavedPopup && nickAbbreviationInput) {
-                if (
-                    nickAbbreviationSavedPopup === nickAbbreviationInput &&
-                    nameSavedPopup === nameInput &&
-                    channelSavedPopup === channelInput
-                ) {
-                    await chrome.runtime.sendMessage({ sameData: true });
-
-                    return;
-                }
-            }
-        }
-
-        if (tmiConnected && channelInput && !isConnectedChannel) {
-            isConnectedChannel = true;
-            await tmiClient.part(channelInput);
-            await new Promise((resolve) => setTimeout(resolve, 500));
-            isConnectedChannel = false;
-        }
-
-        nameInput = nameSavedPopup;
-        channelInput = channelSavedPopup;
-        nickAbbreviationInput = nickAbbreviationSavedPopup;
-
-        if (nickAbbreviationInput) {
-            nickAbbreviationInputArray = createNickAbbreviationInputArray(
-                nickAbbreviationInput,
-            );
-        } else {
-            nickAbbreviationInputArray = [];
-        }
-
-        if (tmiConnected) {
-            await tmiClient.join(channelInput);
-        }
-
-        return;
-    }
-});
+enableOrDisableExtensionAndChangeChannelEvent(
+    () => getSavedPopupData(),
+    tmiClient,
+    extensionActivationInProgress,
+    extensionEnabled,
+    () => main(),
+    nameInput,
+    channelInput,
+    nickAbbreviationInput,
+    tmiConnected,
+    isConnectedChannel,
+    nickAbbreviationInputArray,
+);
 
 async function getSavedPopupData() {
     const { nameSavedPopup, channelSavedPopup, nickAbbreviationSavedPopup } =
