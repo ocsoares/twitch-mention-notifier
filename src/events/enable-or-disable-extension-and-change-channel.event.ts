@@ -4,15 +4,15 @@ import { Client } from 'tmi.js';
 export async function enableOrDisableExtensionAndChangeChannelEvent(
     getSavedPopupData: () => Promise<void>,
     tmiClient: Client,
-    extensionActivationInProgress: boolean,
-    extensionEnabled: boolean,
+    extensionActivationInProgress = false,
+    extensionEnabled = false,
     main: () => Promise<void>,
     nameInput: string,
     channelInput: string,
     nickAbbreviationInput: string,
     tmiConnected: [string, number] | undefined = undefined,
-    isConnectedChannel: boolean,
-    nickAbbreviationInputArray: string[],
+    isConnectedChannel = false,
+    nickAbbreviationInputArray: string[] = [],
 ) {
     chrome.runtime.onMessage.addListener(async (request) => {
         const { startButtonClicked, isExtensionEnabledPopup } = request;
