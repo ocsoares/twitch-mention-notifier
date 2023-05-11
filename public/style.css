@@ -50,6 +50,16 @@ body {
     border: none;
     border-radius: 5px;
     cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+
+  button:hover {
+    background-color: #3a334d;
+  }
+  
+  button:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px #5c527f;
   }
   
   button.disabled {
