@@ -1,27 +1,37 @@
+/* eslint-disable prefer-destructuring */
 /* eslint-disable @typescript-eslint/naming-convention */
 
 import { Client, ChatUserstate } from 'tmi.js';
-import { createNickAbbreviationInputArray } from './utils/create-nick-abbreviation-input-array.util';
 import { enableOrDisableExtensionAndChangeChannelEvent } from './events/enable-or-disable-extension-and-change-channel.event';
+import { createNickAbbreviationInputArray } from './utils/create-nick-abbreviation-input-array.util';
+import { getSavedPopupData } from './storage/get-saved-popup-data.storage';
 
 console.log('Twitch Mention Notifier is enabled');
 
 let nameInput: string;
 let channelInput: string;
 let nickAbbreviationInput: string;
-let nickAbbreviationInputArray: string[] = [];
+let nickAbbreviationInputArray: string[];
 let tmiConnected: [string, number] | undefined = undefined;
 let extensionEnabled = false;
-const extensionActivationInProgress = false; // Prevent the main() function from stay activated if disable the extension quickly
-const isConnectedChannel = false; // Prevent the extension from try to leave a channel after it was already left
+let extensionActivationInProgress: boolean; // Prevent the main() function from stay activated if disable the extension quickly
+let isConnectedChannel: boolean; // Prevent the extension from try to leave a channel after it was already left
 let tmiClient: Client;
 
+console.log('extensionEnabled ANTES:', extensionEnabled);
 enableOrDisableExtensionAndChangeChannelEvent(
-    () => getSavedPopupData(),
+    async () =>
+        await getSavedPopupData(
+            nameInput,
+            channelInput,
+            nickAbbreviationInput,
+            nickAbbreviationInputArray,
+        ),
+    // async () => await getSavedPopupData(),
     tmiClient,
     extensionActivationInProgress,
     extensionEnabled,
-    () => main(),
+    async () => await main(),
     nameInput,
     channelInput,
     nickAbbreviationInput,
@@ -29,28 +39,42 @@ enableOrDisableExtensionAndChangeChannelEvent(
     isConnectedChannel,
     nickAbbreviationInputArray,
 );
+console.log('extensionEnabled DEPOIS:', extensionEnabled);
 
-async function getSavedPopupData() {
-    const { nameSavedPopup, channelSavedPopup, nickAbbreviationSavedPopup } =
-        await chrome.storage.local.get([
-            'nameSavedPopup',
-            'channelSavedPopup',
-            'nickAbbreviationSavedPopup',
-        ]);
+// async function getSavedPopupData() {
+//     const { nameSavedPopup, channelSavedPopup, nickAbbreviationSavedPopup } =
+//         await chrome.storage.local.get([
+//             'nameSavedPopup',
+//             'channelSavedPopup',
+//             'nickAbbreviationSavedPopup',
+//         ]);
 
-    nameInput = nameSavedPopup;
-    channelInput = channelSavedPopup;
-    nickAbbreviationInput = nickAbbreviationSavedPopup;
+//     console.log('nameInput ANTES DENTRO:', nameInput);
+//     nameInput = nameSavedPopup;
+//     console.log('nameInput DEPOIS DENTRO:', nameInput);
 
-    // Separate by comma in an array, remove spaces and empty strings
-    if (nickAbbreviationInput) {
-        nickAbbreviationInputArray = createNickAbbreviationInputArray(
-            nickAbbreviationInput,
-        );
-    }
-}
+//     channelInput = channelSavedPopup;
+//     nickAbbreviationInput = nickAbbreviationSavedPopup;
+
+//     // Separate by comma in an array, remove spaces and empty strings
+//     if (nickAbbreviationInput) {
+//         nickAbbreviationInputArray = createNickAbbreviationInputArray(
+//             nickAbbreviationInput,
+//         );
+//     }
+// }
+
+getSavedPopupData(
+    nameInput,
+    channelInput,
+    nickAbbreviationInput,
+    nickAbbreviationInputArray,
+).then((result) => {
+    channelInput = result.channelInput;
+});
 
 async function main() {
+    console.log('channelInput NO MAIN:', channelInput);
     tmiClient = new Client({ channels: [channelInput] });
 
     tmiConnected = await tmiClient.connect();
@@ -63,6 +87,7 @@ async function main() {
             message: string,
             self: boolean,
         ) => {
+            console.log('MENSAGEM:', message);
             if (!extensionEnabled) {
                 return;
             }
@@ -130,7 +155,13 @@ chrome.storage.local.get('isExtensionEnabledPopup', async (request) => {
     const { isExtensionEnabledPopup } = request;
 
     if (isExtensionEnabledPopup === true) {
-        await getSavedPopupData();
+        await getSavedPopupData(
+            nameInput,
+            channelInput,
+            nickAbbreviationInput,
+            nickAbbreviationInputArray,
+        );
+        // await getSavedPopupData();
         await main();
         extensionEnabled = true;
     }

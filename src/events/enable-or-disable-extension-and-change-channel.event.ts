@@ -2,23 +2,25 @@ import { createNickAbbreviationInputArray } from '../utils/create-nick-abbreviat
 import { Client } from 'tmi.js';
 
 export async function enableOrDisableExtensionAndChangeChannelEvent(
-    getSavedPopupData: () => Promise<void>,
+    getSavedPopupData: () => Promise<object>,
     tmiClient: Client,
-    extensionActivationInProgress = false,
-    extensionEnabled = false,
+    extensionActivationInProgress: boolean,
+    extensionEnabled: boolean,
     main: () => Promise<void>,
     nameInput: string,
     channelInput: string,
     nickAbbreviationInput: string,
     tmiConnected: [string, number] | undefined = undefined,
-    isConnectedChannel = false,
-    nickAbbreviationInputArray: string[] = [],
+    isConnectedChannel: boolean,
+    nickAbbreviationInputArray: string[],
 ) {
     chrome.runtime.onMessage.addListener(async (request) => {
+        console.log('nameInput do PARÂMETRO enableOr...', nameInput);
         const { startButtonClicked, isExtensionEnabledPopup } = request;
 
         if (isExtensionEnabledPopup === true) {
             await getSavedPopupData();
+            console.log('nameInput DEPIS NO ENABLEOR...:', nameInput);
 
             if (!tmiClient) {
                 extensionActivationInProgress = true;
@@ -123,6 +125,8 @@ export async function enableOrDisableExtensionAndChangeChannelEvent(
             }
 
             if (tmiConnected) {
+                console.log('ENTROU NO CANAL !!!');
+                console.log('channelInput ENTRADO:', channelInput);
                 await tmiClient.join(channelInput);
             }
 
