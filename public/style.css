@@ -58,6 +58,16 @@ body {
     cursor: not-allowed;
   }
 
+  #main-title {
+    text-align: center;
+  }
+
+  #main-text {
+    text-align: center;
+    font-size: 20px;
+    color: #5c527f;
+  }
+
   /* Input customization */
 input[type="text"] {
     padding: 10px;
