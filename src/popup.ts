@@ -39,17 +39,21 @@ function changeToggleTextIfEnabledOrDisabled(enabled: boolean) {
 }
 
 async function extensionEnabledOrNot() {
-    const { isExtensionEnabledPopup } = await chrome.storage.local.get(
-        'isExtensionEnabledPopup',
-    );
+    const { isExtensionEnabledPopup, nameSavedPopup, channelSavedPopup } =
+        await chrome.storage.local.get([
+            'isExtensionEnabledPopup',
+            'nameSavedPopup',
+            'channelSavedPopup',
+        ]);
 
-    if (isExtensionEnabledPopup) {
+    if (isExtensionEnabledPopup && nameSavedPopup && channelSavedPopup) {
         toggleButton.checked = true;
         await main();
 
         await changeExtensionIconEnabledOrDisabled(true);
         changeToggleTextIfEnabledOrDisabled(true);
     } else {
+        toggleButton.checked = false;
         startButton.classList.add('disabled');
         await changeExtensionIconEnabledOrDisabled(false);
         changeToggleTextIfEnabledOrDisabled(false);
