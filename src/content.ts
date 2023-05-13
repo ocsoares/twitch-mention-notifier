@@ -54,8 +54,6 @@ export class TwitchMentionNotifier {
                     return;
                 }
 
-                console.log('message: ', message);
-
                 if (TwitchMentionNotifier.nameInput) {
                     let badge = '';
 
@@ -138,8 +136,10 @@ export class TwitchMentionNotifier {
                     !TwitchMentionNotifier.tmiConnected
                 ) {
                     await TwitchMentionNotifier.getSavedPopupDataLocalStorage();
-                    await TwitchMentionNotifier.init();
-                    TwitchMentionNotifier.extensionEnabled = true;
+                    if (TwitchMentionNotifier.channelInput) {
+                        await TwitchMentionNotifier.init();
+                        TwitchMentionNotifier.extensionEnabled = true;
+                    }
                 }
             },
         );
@@ -148,7 +148,7 @@ export class TwitchMentionNotifier {
     private static async extensionStateListener(): Promise<void> {
         chrome.runtime.onMessage.addListener(
             async (request: any): Promise<void> => {
-                const { startButtonClicked, isExtensionEnabledPopup } = request;
+                const { isExtensionEnabledPopup } = request;
 
                 if (isExtensionEnabledPopup === true) {
                     await TwitchMentionNotifier.getSavedPopupDataLocalStorage();
@@ -180,6 +180,14 @@ export class TwitchMentionNotifier {
 
                     return;
                 }
+            },
+        );
+    }
+
+    private static async changeChannelListener(): Promise<void> {
+        chrome.runtime.onMessage.addListener(
+            async (request: any): Promise<void> => {
+                const { startButtonClicked } = request;
 
                 if (
                     startButtonClicked &&
@@ -264,20 +272,18 @@ export class TwitchMentionNotifier {
                         !TwitchMentionNotifier.isConnectedChannel
                     ) {
                         TwitchMentionNotifier.isConnectedChannel = true;
-                        console.log(
-                            'channels SAINDO:',
-                            TwitchMentionNotifier.tmiClient.getChannels(),
-                        );
-                        console.log(
-                            'channelInput:',
-                            TwitchMentionNotifier.channelInput,
-                        );
-                        await TwitchMentionNotifier.tmiClient.part(
-                            TwitchMentionNotifier.channelInput,
-                        );
-                        await new Promise((resolve) =>
-                            setTimeout(resolve, 500),
-                        );
+
+                        const channels =
+                            TwitchMentionNotifier.tmiClient.getChannels();
+
+                        // Leave all channels
+                        for (const channel of channels) {
+                            TwitchMentionNotifier.tmiClient.part(channel);
+                            await new Promise((resolve) =>
+                                setTimeout(resolve, 1000),
+                            );
+                        }
+
                         TwitchMentionNotifier.isConnectedChannel = false;
                     }
 
@@ -296,10 +302,6 @@ export class TwitchMentionNotifier {
                     }
 
                     if (TwitchMentionNotifier.tmiConnected) {
-                        console.log(
-                            'channels ENTRANDO:',
-                            TwitchMentionNotifier.tmiClient.getChannels(),
-                        );
                         await TwitchMentionNotifier.tmiClient.join(
                             TwitchMentionNotifier.channelInput,
                         );
@@ -339,6 +341,7 @@ export class TwitchMentionNotifier {
     public static async start(): Promise<void> {
         await TwitchMentionNotifier.enableExtensionIfLoadEnabled();
         await TwitchMentionNotifier.extensionStateListener();
+        await TwitchMentionNotifier.changeChannelListener();
     }
 }
 
