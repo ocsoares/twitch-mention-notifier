@@ -277,6 +277,7 @@ export class TwitchMentionNotifier {
                         nickAbbreviationSavedPopup,
                     );
 
+                    // Leave all channels
                     if (
                         TwitchMentionNotifier.tmiConnected &&
                         TwitchMentionNotifier.channelInput &&
@@ -287,7 +288,6 @@ export class TwitchMentionNotifier {
                         const channels =
                             TwitchMentionNotifier.tmiClient.getChannels();
 
-                        // Leave all channels
                         for (const channel of channels) {
                             TwitchMentionNotifier.tmiClient.part(channel);
                             await new Promise((resolve) =>
@@ -312,6 +312,7 @@ export class TwitchMentionNotifier {
                         TwitchMentionNotifier.nickAbbreviationInputArray = [];
                     }
 
+                    // Join channel
                     if (TwitchMentionNotifier.tmiConnected) {
                         await TwitchMentionNotifier.tmiClient.join(
                             TwitchMentionNotifier.channelInput,
