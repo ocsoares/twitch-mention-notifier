@@ -1,180 +1,231 @@
+/* eslint-disable @typescript-eslint/naming-convention */
+
 import { checkIfChannelExists } from './services/check-if-channel-exists.service';
 
-const channelInput = document.getElementById('channel') as HTMLInputElement;
-const nameInput = document.getElementById('name') as HTMLInputElement;
-const nickAbbreviationInput = document.getElementById(
-    'nick-abbreviation',
-) as HTMLInputElement;
-const startButton = document.getElementById('start-button');
-const toggleButton = document.getElementById('toggle') as HTMLInputElement;
-const toggleText = document.getElementById('toggle-text');
-let buttonClickEvent: () => Promise<void>;
+export class Popup {
+    private static channelInput = document.getElementById(
+        'channel',
+    ) as HTMLInputElement;
 
-chrome.runtime.onMessage.addListener(async (request) => {
-    const { sameData } = request;
+    private static nameInput = document.getElementById(
+        'name',
+    ) as HTMLInputElement;
 
-    if (sameData) {
-        alert('You are already connected with this data !');
+    private static nickAbbreviationInput = document.getElementById(
+        'nick-abbreviation',
+    ) as HTMLInputElement;
 
-        return;
-    }
-});
+    private static startButton = document.getElementById('start-button');
 
-async function changeExtensionIconEnabledOrDisabled(enabled: boolean) {
-    if (enabled) {
-        await chrome.action.setIcon({ path: 'icons/twitch-icon_32.png' });
-    } else {
-        await chrome.action.setIcon({
-            path: 'icons/twitch-icon-disabled_32.png',
+    private static toggleButton = document.getElementById(
+        'toggle',
+    ) as HTMLInputElement;
+
+    private static toggleText = document.getElementById('toggle-text');
+    private static buttonClickEvent: () => Promise<void>;
+
+    // TESTAR isso aqui dentro do buttonClickEventListener(), porque se for true, JÁ DOU UM RETURN !!!
+    // OBS: TENTAR pq isso aqui é assíncrono...
+    private static async checkIfInputDataIsTheSameListener(): Promise<void> {
+        chrome.runtime.onMessage.addListener(async (request) => {
+            const { sameData } = request;
+
+            if (sameData) {
+                alert('You are already connected with this data !');
+
+                return;
+            }
         });
     }
-}
 
-function changeToggleTextIfEnabledOrDisabled(enabled: boolean) {
-    if (enabled) {
-        toggleText.textContent = 'Enabled';
-    } else {
-        toggleText.textContent = 'Disabled';
-    }
-}
-
-async function extensionEnabledOrNot() {
-    const { isExtensionEnabledPopup, nameSavedPopup, channelSavedPopup } =
-        await chrome.storage.local.get([
-            'isExtensionEnabledPopup',
-            'nameSavedPopup',
-            'channelSavedPopup',
-        ]);
-
-    if (isExtensionEnabledPopup && nameSavedPopup && channelSavedPopup) {
-        toggleButton.checked = true;
-        await main();
-
-        await changeExtensionIconEnabledOrDisabled(true);
-        changeToggleTextIfEnabledOrDisabled(true);
-    } else {
-        toggleButton.checked = false;
-        startButton.classList.add('disabled');
-        await changeExtensionIconEnabledOrDisabled(false);
-        changeToggleTextIfEnabledOrDisabled(false);
+    private static async changeExtensionIconIfEnabledOrDisabled(
+        enabled: boolean,
+    ): Promise<void> {
+        if (enabled) {
+            await chrome.action.setIcon({ path: 'icons/twitch-icon_32.png' });
+        } else {
+            await chrome.action.setIcon({
+                path: 'icons/twitch-icon-disabled_32.png',
+            });
+        }
     }
 
-    toggleButton.addEventListener('change', async () => {
-        const isExtensionEnabledPopup = toggleButton.checked;
+    private static async changeToggleTextIfEnabledOrDisabled(
+        enabled: boolean,
+    ): Promise<void> {
+        if (enabled) {
+            Popup.toggleText.textContent = 'Enabled';
+        } else {
+            Popup.toggleText.textContent = 'Disabled';
+        }
+    }
 
-        if (isExtensionEnabledPopup) {
-            await main();
+    private static async enabledExtensionState(): Promise<void> {
+        Popup.startButton.classList.remove('disabled');
+        await Popup.changeExtensionIconIfEnabledOrDisabled(true);
+        Popup.changeToggleTextIfEnabledOrDisabled(true);
+    }
 
+    private static async disabledExtensionState(): Promise<void> {
+        Popup.startButton.classList.add('disabled');
+        await Popup.changeExtensionIconIfEnabledOrDisabled(false);
+        Popup.changeToggleTextIfEnabledOrDisabled(false);
+    }
+
+    private static clearsHTMLInputsValues(): void {
+        Popup.nameInput.value = '';
+        Popup.channelInput.value = '';
+        Popup.nickAbbreviationInput.value = '';
+    }
+
+    private static async setIsExtensionEnabledPopup(
+        boolean: boolean,
+    ): Promise<void> {
+        if (boolean) {
             await chrome.storage.local.set({
                 isExtensionEnabledPopup: true,
             });
-
-            startButton.classList.remove('disabled');
-            await changeExtensionIconEnabledOrDisabled(true);
-            changeToggleTextIfEnabledOrDisabled(true);
         } else {
-            nameInput.value = '';
-            channelInput.value = '';
-            nickAbbreviationInput.value = '';
-
             await chrome.storage.local.set({
                 isExtensionEnabledPopup: false,
             });
-
-            startButton.classList.add('disabled');
-            await changeExtensionIconEnabledOrDisabled(false);
-            changeToggleTextIfEnabledOrDisabled(false);
-
-            startButton.removeEventListener('click', buttonClickEvent);
-        }
-
-        chrome.tabs.query(
-            { active: true, currentWindow: true },
-            async (tabs) => {
-                await chrome.tabs.sendMessage(tabs[0].id, {
-                    isExtensionEnabledPopup,
-                });
-            },
-        );
-    });
-}
-
-extensionEnabledOrNot();
-
-async function main() {
-    const { nameSavedPopup, channelSavedPopup, nickAbbreviationSavedPopup } =
-        await chrome.storage.local.get([
-            'nameSavedPopup',
-            'channelSavedPopup',
-            'nickAbbreviationSavedPopup',
-        ]);
-
-    nameInput.value = '';
-    channelInput.value = '';
-    nickAbbreviationInput.value = '';
-
-    if (nameSavedPopup && channelSavedPopup) {
-        nameInput.value = nameSavedPopup;
-        channelInput.value = channelSavedPopup;
-
-        if (nickAbbreviationSavedPopup) {
-            nickAbbreviationInput.value = nickAbbreviationSavedPopup;
         }
     }
 
-    return await new Promise<void>((resolve) => {
-        buttonClickEvent = async () => {
+    private static async enableExtensionPopupIfLoadEnabled(): Promise<void> {
+        const { isExtensionEnabledPopup, nameSavedPopup, channelSavedPopup } =
+            await chrome.storage.local.get([
+                'isExtensionEnabledPopup',
+                'nameSavedPopup',
+                'channelSavedPopup',
+            ]);
+
+        if (isExtensionEnabledPopup && nameSavedPopup && channelSavedPopup) {
+            Popup.toggleButton.checked = true;
+            await Popup.init();
+
+            // ADICIONADO O: "Popup.startButton.classList.remove('disabled');" AQUI, TESTAR PQ NÃO TINHA ANTES !!!
+            await Popup.enabledExtensionState();
+        } else {
+            Popup.toggleButton.checked = false;
+            await Popup.disabledExtensionState();
+        }
+
+        Popup.toggleButton.addEventListener('change', async () => {
+            const isExtensionEnabledPopup = Popup.toggleButton.checked;
+
+            if (isExtensionEnabledPopup) {
+                await Popup.init();
+
+                await Popup.setIsExtensionEnabledPopup(true);
+
+                await Popup.enabledExtensionState();
+            } else {
+                Popup.clearsHTMLInputsValues();
+
+                await Popup.setIsExtensionEnabledPopup(false);
+
+                await Popup.disabledExtensionState();
+
+                Popup.startButton.removeEventListener(
+                    'click',
+                    Popup.buttonClickEvent,
+                );
+            }
+
+            chrome.tabs.query(
+                { active: true, currentWindow: true },
+                async (tabs) => {
+                    await chrome.tabs.sendMessage(tabs[0].id, {
+                        isExtensionEnabledPopup,
+                    });
+                },
+            );
+        });
+    }
+
+    private static async channelValidation(
+        channelInputValue: string,
+    ): Promise<boolean> {
+        const isValidChannel = await checkIfChannelExists(channelInputValue);
+
+        if (isValidChannel === undefined) {
+            alert('An error occurred, try again later !');
+
+            return false;
+        }
+
+        if (isValidChannel === false) {
+            alert('The channel does not exist !');
+
+            return false;
+        }
+
+        return true;
+    }
+
+    private static async nameValidation(
+        nameInputValue: string,
+    ): Promise<boolean> {
+        const isValidName = await checkIfChannelExists(nameInputValue);
+
+        if (isValidName === undefined) {
+            alert('An error occurred, try again later !');
+
+            return false;
+        }
+
+        if (isValidName === false) {
+            alert('The name does not exist !');
+
+            return false;
+        }
+
+        return true;
+    }
+
+    private static async buttonClickEventListener(): Promise<void> {
+        Popup.buttonClickEvent = async () => {
             if (
-                channelInput.value.length < 4 ||
-                channelInput.value.length > 25
+                Popup.channelInput.value.length < 4 ||
+                Popup.channelInput.value.length > 25
             ) {
                 alert('The channel must have between 4 and 25 characters');
 
                 return;
             }
 
-            const isValidChannel = await checkIfChannelExists(
-                channelInput.value,
+            const channelValidationResponse = await Popup.channelValidation(
+                Popup.channelInput.value,
             );
 
-            if (isValidChannel === undefined) {
-                alert('An error occurred, try again later !');
-
+            if (!channelValidationResponse) {
                 return;
             }
 
-            if (isValidChannel === false) {
-                alert('The channel does not exist !');
-
-                return;
-            }
-
-            if (nameInput.value.length < 4 || nameInput.value.length > 25) {
+            if (
+                Popup.nameInput.value.length < 4 ||
+                Popup.nameInput.value.length > 25
+            ) {
                 alert('The name needs to have between 4 and 25 characters');
 
                 return;
             }
 
-            const isValidName = await checkIfChannelExists(nameInput.value);
+            const nameValidationResponse = await Popup.nameValidation(
+                Popup.nameInput.value,
+            );
 
-            if (isValidName === undefined) {
-                alert('An error occurred, try again later !');
-
-                return;
-            }
-
-            if (isValidName === false) {
-                alert('The name does not exist !');
-
+            if (!nameValidationResponse) {
                 return;
             }
 
             alert('Extension activated successfully !');
 
             await chrome.storage.local.set({
-                nameSavedPopup: nameInput.value,
-                channelSavedPopup: channelInput.value,
-                nickAbbreviationSavedPopup: nickAbbreviationInput.value,
+                nameSavedPopup: Popup.nameInput.value,
+                channelSavedPopup: Popup.channelInput.value,
+                nickAbbreviationSavedPopup: Popup.nickAbbreviationInput.value,
             });
 
             chrome.tabs.query(
@@ -182,18 +233,47 @@ async function main() {
                 async (tabs) => {
                     await chrome.tabs.sendMessage(tabs[0].id, {
                         startButtonClicked: {
-                            channelSavedPopup: channelInput.value,
-                            nameSavedPopup: nameInput.value,
+                            channelSavedPopup: Popup.channelInput.value,
+                            nameSavedPopup: Popup.nameInput.value,
                             nickAbbreviationSavedPopup:
-                                nickAbbreviationInput.value ?? undefined,
+                                Popup.nickAbbreviationInput.value ?? undefined,
                         },
                     });
                 },
             );
         };
+    }
 
-        startButton.addEventListener('click', buttonClickEvent);
+    private static async init(): Promise<void> {
+        const {
+            nameSavedPopup,
+            channelSavedPopup,
+            nickAbbreviationSavedPopup,
+        } = await chrome.storage.local.get([
+            'nameSavedPopup',
+            'channelSavedPopup',
+            'nickAbbreviationSavedPopup',
+        ]);
 
-        resolve();
-    });
+        Popup.clearsHTMLInputsValues();
+
+        if (nameSavedPopup && channelSavedPopup) {
+            Popup.nameInput.value = nameSavedPopup;
+            Popup.channelInput.value = channelSavedPopup;
+
+            if (nickAbbreviationSavedPopup) {
+                Popup.nickAbbreviationInput.value = nickAbbreviationSavedPopup;
+            }
+        }
+
+        await Popup.buttonClickEventListener();
+        Popup.startButton.addEventListener('click', Popup.buttonClickEvent);
+    }
+
+    public static async start(): Promise<void> {
+        await Popup.checkIfInputDataIsTheSameListener();
+        await Popup.enableExtensionPopupIfLoadEnabled();
+    }
 }
+
+Popup.start();

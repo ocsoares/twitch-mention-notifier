@@ -5,7 +5,6 @@ import { createNickAbbreviationInputArray } from './utils/create-nick-abbreviati
 
 console.log('Twitch Mention Notifier is enabled');
 
-// TESTAR com dois LISTENER e separar em Métodos, para ver se NÃO duplica as mensagens !!!
 // ARRUMAR porque no Listener de SAIR e ENTRAR no canal quando aperta mt rápido em start ele EN-
 // -TRA no Canal, ficando 2 canais !!!
 // USAR o IInputStorageData !!!
