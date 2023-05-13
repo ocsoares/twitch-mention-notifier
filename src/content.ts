@@ -1,168 +1,345 @@
-/* eslint-disable prefer-destructuring */
 /* eslint-disable @typescript-eslint/naming-convention */
 
 import { Client, ChatUserstate } from 'tmi.js';
-import { enableOrDisableExtensionAndChangeChannelEvent } from './events/enable-or-disable-extension-and-change-channel.event';
 import { createNickAbbreviationInputArray } from './utils/create-nick-abbreviation-input-array.util';
-import { getSavedPopupData } from './storage/get-saved-popup-data.storage';
 
 console.log('Twitch Mention Notifier is enabled');
 
-let nameInput: string;
-let channelInput: string;
-let nickAbbreviationInput: string;
-let nickAbbreviationInputArray: string[];
-let tmiConnected: [string, number] | undefined = undefined;
-let extensionEnabled = false;
-let extensionActivationInProgress: boolean; // Prevent the main() function from stay activated if disable the extension quickly
-let isConnectedChannel: boolean; // Prevent the extension from try to leave a channel after it was already left
-let tmiClient: Client;
+export class TwitchMentionNotifier {
+    private static nameInput: string;
+    private static channelInput: string;
+    private static nickAbbreviationInput: string;
+    private static nickAbbreviationInputArray: string[] = [];
+    private static tmiConnected: [string, number] | undefined = undefined;
+    private static extensionEnabled = false;
+    private static extensionActivationInProgress = false; // Prevent the init() method from stay activated if disable the extension quickly
+    private static isConnectedChannel = false; // Prevent the extension from try to leave a channel after it was already left
+    private static tmiClient: Client;
 
-console.log('extensionEnabled ANTES:', extensionEnabled);
-enableOrDisableExtensionAndChangeChannelEvent(
-    async () =>
-        await getSavedPopupData(
-            nameInput,
-            channelInput,
-            nickAbbreviationInput,
-            nickAbbreviationInputArray,
-        ),
-    // async () => await getSavedPopupData(),
-    tmiClient,
-    extensionActivationInProgress,
-    extensionEnabled,
-    async () => await main(),
-    nameInput,
-    channelInput,
-    nickAbbreviationInput,
-    tmiConnected,
-    isConnectedChannel,
-    nickAbbreviationInputArray,
-);
-console.log('extensionEnabled DEPOIS:', extensionEnabled);
+    private static async connectTmiClient(): Promise<void> {
+        TwitchMentionNotifier.tmiClient = new Client({
+            channels: [TwitchMentionNotifier.channelInput],
+        });
+        TwitchMentionNotifier.tmiConnected =
+            await TwitchMentionNotifier.tmiClient.connect();
+    }
 
-// async function getSavedPopupData() {
-//     const { nameSavedPopup, channelSavedPopup, nickAbbreviationSavedPopup } =
-//         await chrome.storage.local.get([
-//             'nameSavedPopup',
-//             'channelSavedPopup',
-//             'nickAbbreviationSavedPopup',
-//         ]);
-
-//     console.log('nameInput ANTES DENTRO:', nameInput);
-//     nameInput = nameSavedPopup;
-//     console.log('nameInput DEPOIS DENTRO:', nameInput);
-
-//     channelInput = channelSavedPopup;
-//     nickAbbreviationInput = nickAbbreviationSavedPopup;
-
-//     // Separate by comma in an array, remove spaces and empty strings
-//     if (nickAbbreviationInput) {
-//         nickAbbreviationInputArray = createNickAbbreviationInputArray(
-//             nickAbbreviationInput,
-//         );
-//     }
-// }
-
-getSavedPopupData(
-    nameInput,
-    channelInput,
-    nickAbbreviationInput,
-    nickAbbreviationInputArray,
-).then((result) => {
-    channelInput = result.channelInput;
-});
-
-async function main() {
-    console.log('channelInput NO MAIN:', channelInput);
-    tmiClient = new Client({ channels: [channelInput] });
-
-    tmiConnected = await tmiClient.connect();
-
-    tmiClient.on(
-        'message',
-        async (
+    private static async tmiNotificationListener(): Promise<void> {
+        function allowNotificationToBackgroundScript(
             channel: string,
             tags: ChatUserstate,
-            message: string,
-            self: boolean,
-        ) => {
-            console.log('MENSAGEM:', message);
-            if (!extensionEnabled) {
-                return;
-            }
+            badge: string,
+        ): void {
+            const toBackgroundScript = chrome.runtime.connect({
+                name: 'content-script',
+            });
 
-            if (nameInput) {
-                let badge = '';
+            toBackgroundScript.postMessage({
+                sendNotification: true,
+                mentionedInChannel: channel.replace('#', ''),
+                mentionedBy: tags.username,
+                badge,
+            });
+        }
 
-                if (tags.badges && tags.badges.broadcaster) {
-                    badge = '[BROADCASTER]';
+        TwitchMentionNotifier.tmiClient.on(
+            'message',
+            async (
+                channel: string,
+                tags: ChatUserstate,
+                message: string,
+                self: boolean,
+            ): Promise<void> => {
+                if (!TwitchMentionNotifier.extensionEnabled) {
+                    return;
                 }
 
-                if (tags.badges && tags.badges.vip) {
-                    badge = '[VIP]';
+                console.log('message: ', message);
+
+                if (TwitchMentionNotifier.nameInput) {
+                    let badge = '';
+
+                    if (tags.badges && tags.badges.broadcaster) {
+                        badge = '[BROADCASTER]';
+                    }
+
+                    if (tags.badges && tags.badges.vip) {
+                        badge = '[VIP]';
+                    }
+
+                    if (tags.badges && tags.badges.moderator) {
+                        badge = '[MODERATOR]';
+                    }
+
+                    if (
+                        tags.badges &&
+                        tags.badges.vip &&
+                        tags.badges.moderator
+                    ) {
+                        badge = '[VIP/MODERATOR]';
+                    }
+
+                    const nameInputRegex = new RegExp(
+                        `\\b${TwitchMentionNotifier.nameInput}\\b`,
+                        'i',
+                    );
+
+                    const wasMentioned = nameInputRegex.test(message);
+
+                    if (wasMentioned) {
+                        allowNotificationToBackgroundScript(
+                            channel,
+                            tags,
+                            badge,
+                        );
+
+                        return;
+                    }
+
+                    const nickAbbreviationInputRegex = new RegExp(
+                        `\\b(${TwitchMentionNotifier.nickAbbreviationInputArray.join(
+                            '|',
+                        )})\\b`,
+                        'i',
+                    );
+
+                    const wasMentionedAbbreviated =
+                        nickAbbreviationInputRegex.test(message);
+
+                    if (
+                        TwitchMentionNotifier.nickAbbreviationInputArray.length
+                    ) {
+                        if (wasMentionedAbbreviated) {
+                            allowNotificationToBackgroundScript(
+                                channel,
+                                tags,
+                                badge,
+                            );
+                        }
+                    }
                 }
+            },
+        );
+    }
 
-                if (tags.badges && tags.badges.moderator) {
-                    badge = '[MODERATOR]';
+    private static async init(): Promise<void> {
+        await TwitchMentionNotifier.connectTmiClient();
+        await TwitchMentionNotifier.tmiNotificationListener();
+    }
+
+    private static async enableExtensionIfLoadEnabled(): Promise<void> {
+        chrome.storage.local.get(
+            'isExtensionEnabledPopup',
+            async (request: any): Promise<void> => {
+                const { isExtensionEnabledPopup } = request;
+
+                if (
+                    isExtensionEnabledPopup === true &&
+                    !TwitchMentionNotifier.tmiConnected
+                ) {
+                    await TwitchMentionNotifier.getSavedPopupDataLocalStorage();
+                    await TwitchMentionNotifier.init();
+                    TwitchMentionNotifier.extensionEnabled = true;
                 }
+            },
+        );
+    }
 
-                if (tags.badges && tags.badges.vip && tags.badges.moderator) {
-                    badge = '[VIP/MODERATOR]';
-                }
+    private static async extensionStateListener(): Promise<void> {
+        chrome.runtime.onMessage.addListener(
+            async (request: any): Promise<void> => {
+                const { startButtonClicked, isExtensionEnabledPopup } = request;
 
-                const toBackgroundScript = chrome.runtime.connect({
-                    name: 'content-script',
-                });
+                if (isExtensionEnabledPopup === true) {
+                    await TwitchMentionNotifier.getSavedPopupDataLocalStorage();
 
-                function postMessageToBackgroundScript() {
-                    toBackgroundScript.postMessage({
-                        sendNotification: true,
-                        mentionedInChannel: channel.replace('#', ''),
-                        mentionedBy: tags.username,
-                        badge,
-                    });
-                }
+                    if (!TwitchMentionNotifier.tmiClient) {
+                        TwitchMentionNotifier.extensionActivationInProgress =
+                            true;
+                        await TwitchMentionNotifier.init();
+                        TwitchMentionNotifier.extensionActivationInProgress =
+                            false;
+                    }
 
-                const nameInputRegex = new RegExp(`\\b${nameInput}\\b`, 'i');
-                const wasMentioned = nameInputRegex.test(message);
-
-                if (wasMentioned) {
-                    postMessageToBackgroundScript();
+                    TwitchMentionNotifier.extensionEnabled = true;
 
                     return;
                 }
 
-                const nickAbbreviationInputRegex = new RegExp(
-                    `\\b(${nickAbbreviationInputArray.join('|')})\\b`,
-                    'i',
-                );
-
-                const wasMentionedAbbreviated =
-                    nickAbbreviationInputRegex.test(message);
-
-                if (nickAbbreviationInputArray.length) {
-                    if (wasMentionedAbbreviated) {
-                        postMessageToBackgroundScript();
+                if (isExtensionEnabledPopup === false) {
+                    if (TwitchMentionNotifier.extensionActivationInProgress) {
+                        await new Promise<void>((resolve) =>
+                            setTimeout(() => {
+                                TwitchMentionNotifier.extensionEnabled = false;
+                                resolve();
+                            }, 2000),
+                        );
                     }
+
+                    TwitchMentionNotifier.extensionEnabled = false;
+
+                    return;
                 }
-            }
-        },
-    );
+
+                if (
+                    startButtonClicked &&
+                    TwitchMentionNotifier.extensionEnabled
+                ) {
+                    const {
+                        nameSavedPopup,
+                        channelSavedPopup,
+                        nickAbbreviationSavedPopup,
+                    } = startButtonClicked;
+
+                    // Prevent the user from trying to connect with the same inputs
+                    if (
+                        nameSavedPopup &&
+                        TwitchMentionNotifier.nameInput &&
+                        channelSavedPopup &&
+                        TwitchMentionNotifier.channelInput &&
+                        nickAbbreviationSavedPopup &&
+                        TwitchMentionNotifier.nickAbbreviationInput
+                    ) {
+                        if (
+                            channelSavedPopup ===
+                                TwitchMentionNotifier.channelInput &&
+                            nameSavedPopup ===
+                                TwitchMentionNotifier.nameInput &&
+                            nickAbbreviationSavedPopup ===
+                                TwitchMentionNotifier.nickAbbreviationInput
+                        ) {
+                            await chrome.runtime.sendMessage({
+                                sameData: true,
+                            });
+
+                            return;
+                        }
+                    }
+
+                    if (
+                        nameSavedPopup &&
+                        TwitchMentionNotifier.nameInput &&
+                        channelSavedPopup &&
+                        TwitchMentionNotifier.channelInput
+                    ) {
+                        if (
+                            channelSavedPopup ===
+                                TwitchMentionNotifier.channelInput &&
+                            nameSavedPopup ===
+                                TwitchMentionNotifier.nameInput &&
+                            !nickAbbreviationSavedPopup &&
+                            !TwitchMentionNotifier.nickAbbreviationInput
+                        ) {
+                            await chrome.runtime.sendMessage({
+                                sameData: true,
+                            });
+
+                            return;
+                        }
+
+                        if (
+                            nickAbbreviationSavedPopup &&
+                            TwitchMentionNotifier.nickAbbreviationInput
+                        ) {
+                            if (
+                                nickAbbreviationSavedPopup ===
+                                    TwitchMentionNotifier.nickAbbreviationInput &&
+                                nameSavedPopup ===
+                                    TwitchMentionNotifier.nameInput &&
+                                channelSavedPopup ===
+                                    TwitchMentionNotifier.channelInput
+                            ) {
+                                await chrome.runtime.sendMessage({
+                                    sameData: true,
+                                });
+
+                                return;
+                            }
+                        }
+                    }
+
+                    if (
+                        TwitchMentionNotifier.tmiConnected &&
+                        TwitchMentionNotifier.channelInput &&
+                        !TwitchMentionNotifier.isConnectedChannel
+                    ) {
+                        TwitchMentionNotifier.isConnectedChannel = true;
+                        console.log(
+                            'channels SAINDO:',
+                            TwitchMentionNotifier.tmiClient.getChannels(),
+                        );
+                        console.log(
+                            'channelInput:',
+                            TwitchMentionNotifier.channelInput,
+                        );
+                        await TwitchMentionNotifier.tmiClient.part(
+                            TwitchMentionNotifier.channelInput,
+                        );
+                        await new Promise((resolve) =>
+                            setTimeout(resolve, 500),
+                        );
+                        TwitchMentionNotifier.isConnectedChannel = false;
+                    }
+
+                    TwitchMentionNotifier.nameInput = nameSavedPopup;
+                    TwitchMentionNotifier.channelInput = channelSavedPopup;
+                    TwitchMentionNotifier.nickAbbreviationInput =
+                        nickAbbreviationSavedPopup;
+
+                    if (TwitchMentionNotifier.nickAbbreviationInput) {
+                        TwitchMentionNotifier.nickAbbreviationInputArray =
+                            createNickAbbreviationInputArray(
+                                TwitchMentionNotifier.nickAbbreviationInput,
+                            );
+                    } else {
+                        TwitchMentionNotifier.nickAbbreviationInputArray = [];
+                    }
+
+                    if (TwitchMentionNotifier.tmiConnected) {
+                        console.log(
+                            'channels ENTRANDO:',
+                            TwitchMentionNotifier.tmiClient.getChannels(),
+                        );
+                        await TwitchMentionNotifier.tmiClient.join(
+                            TwitchMentionNotifier.channelInput,
+                        );
+                    }
+
+                    return;
+                }
+            },
+        );
+    }
+
+    private static async getSavedPopupDataLocalStorage(): Promise<void> {
+        const {
+            nameSavedPopup,
+            channelSavedPopup,
+            nickAbbreviationSavedPopup,
+        } = await chrome.storage.local.get([
+            'nameSavedPopup',
+            'channelSavedPopup',
+            'nickAbbreviationSavedPopup',
+        ]);
+
+        TwitchMentionNotifier.nameInput = nameSavedPopup;
+        TwitchMentionNotifier.channelInput = channelSavedPopup;
+        TwitchMentionNotifier.nickAbbreviationInput =
+            nickAbbreviationSavedPopup;
+
+        // Separate by comma in an array, remove spaces and empty strings
+        if (TwitchMentionNotifier.nickAbbreviationInput) {
+            TwitchMentionNotifier.nickAbbreviationInputArray =
+                createNickAbbreviationInputArray(
+                    TwitchMentionNotifier.nickAbbreviationInput,
+                );
+        }
+    }
+
+    public static async start(): Promise<void> {
+        await TwitchMentionNotifier.enableExtensionIfLoadEnabled();
+        await TwitchMentionNotifier.extensionStateListener();
+    }
 }
 
-chrome.storage.local.get('isExtensionEnabledPopup', async (request) => {
-    const { isExtensionEnabledPopup } = request;
-
-    if (isExtensionEnabledPopup === true) {
-        await getSavedPopupData(
-            nameInput,
-            channelInput,
-            nickAbbreviationInput,
-            nickAbbreviationInputArray,
-        );
-        // await getSavedPopupData();
-        await main();
-        extensionEnabled = true;
-    }
-});
+TwitchMentionNotifier.start();
