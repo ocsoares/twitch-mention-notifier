@@ -131,6 +131,31 @@ export class TwitchMentionNotifier {
         await TwitchMentionNotifier.tmiNotificationListener();
     }
 
+    private static async getSavedPopupDataLocalStorage(): Promise<void> {
+        const {
+            nameSavedPopup,
+            channelSavedPopup,
+            nickAbbreviationSavedPopup,
+        } = await chrome.storage.local.get([
+            'nameSavedPopup',
+            'channelSavedPopup',
+            'nickAbbreviationSavedPopup',
+        ]);
+
+        TwitchMentionNotifier.nameInput = nameSavedPopup;
+        TwitchMentionNotifier.channelInput = channelSavedPopup;
+        TwitchMentionNotifier.nickAbbreviationInput =
+            nickAbbreviationSavedPopup;
+
+        // Separate by comma in an array, remove spaces and empty strings
+        if (TwitchMentionNotifier.nickAbbreviationInput) {
+            TwitchMentionNotifier.nickAbbreviationInputArray =
+                createNickAbbreviationInputArray(
+                    TwitchMentionNotifier.nickAbbreviationInput,
+                );
+        }
+    }
+
     private static async enableExtensionIfLoadEnabled(): Promise<void> {
         chrome.storage.local.get(
             'isExtensionEnabledPopup',
@@ -323,31 +348,6 @@ export class TwitchMentionNotifier {
                 }
             },
         );
-    }
-
-    private static async getSavedPopupDataLocalStorage(): Promise<void> {
-        const {
-            nameSavedPopup,
-            channelSavedPopup,
-            nickAbbreviationSavedPopup,
-        } = await chrome.storage.local.get([
-            'nameSavedPopup',
-            'channelSavedPopup',
-            'nickAbbreviationSavedPopup',
-        ]);
-
-        TwitchMentionNotifier.nameInput = nameSavedPopup;
-        TwitchMentionNotifier.channelInput = channelSavedPopup;
-        TwitchMentionNotifier.nickAbbreviationInput =
-            nickAbbreviationSavedPopup;
-
-        // Separate by comma in an array, remove spaces and empty strings
-        if (TwitchMentionNotifier.nickAbbreviationInput) {
-            TwitchMentionNotifier.nickAbbreviationInputArray =
-                createNickAbbreviationInputArray(
-                    TwitchMentionNotifier.nickAbbreviationInput,
-                );
-        }
     }
 
     public static async start(): Promise<void> {
