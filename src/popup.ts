@@ -104,7 +104,6 @@ export class Popup {
             Popup.toggleButton.checked = true;
             await Popup.init();
 
-            // ADICIONADO O: "Popup.startButton.classList.remove('disabled');" AQUI, TESTAR PQ NÃO TINHA ANTES !!!
             await Popup.enabledExtensionState();
         } else {
             Popup.toggleButton.checked = false;
@@ -184,6 +183,26 @@ export class Popup {
         return true;
     }
 
+    private static async requestDelay(): Promise<boolean> {
+        const popupRequestCooldown = 10 * 1000; // 10 seconds
+
+        const { popupRequestDelay } = await chrome.storage.local.get(
+            'popupRequestDelay',
+        );
+
+        const nextRequest = popupRequestDelay
+            ? popupRequestDelay + popupRequestCooldown
+            : 0;
+
+        const currentTime = Date.now();
+
+        if (currentTime > nextRequest) {
+            return true;
+        }
+
+        return false;
+    }
+
     private static async buttonClickEventListener(): Promise<void> {
         Popup.buttonClickEvent = async () => {
             if (
@@ -219,6 +238,18 @@ export class Popup {
             if (!nameValidationResponse) {
                 return;
             }
+
+            const isAllowedToMakeRequest = await Popup.requestDelay();
+
+            if (!isAllowedToMakeRequest) {
+                alert('Wait 10 seconds to make another request !');
+
+                return;
+            }
+
+            await chrome.storage.local.set({
+                popupRequestDelay: Date.now(),
+            });
 
             alert('Extension activated successfully !');
 
