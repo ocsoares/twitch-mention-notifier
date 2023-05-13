@@ -5,6 +5,12 @@ import { createNickAbbreviationInputArray } from './utils/create-nick-abbreviati
 
 console.log('Twitch Mention Notifier is enabled');
 
+// TESTAR com dois LISTENER e separar em Métodos, para ver se NÃO duplica as mensagens !!!
+// ARRUMAR porque no Listener de SAIR e ENTRAR no canal quando aperta mt rápido em start ele EN-
+// -TRA no Canal, ficando 2 canais !!!
+// USAR o IInputStorageData !!!
+// >>>IMPORTANTE: Fazer um DELAY no popup.ts para NÃO ficar fazendo Requisições no tmi.js, porque ele BLOQUEIA !!!!
+// OBS: Fazer igual fiz com a Notification lá, com os segundos...
 export class TwitchMentionNotifier {
     private static nameInput: string;
     private static channelInput: string;
@@ -184,6 +190,72 @@ export class TwitchMentionNotifier {
         );
     }
 
+    private static async preventConnectWithSameInputs(
+        nameSavedPopup: string,
+        channelSavedPopup: string,
+        nickAbbreviationSavedPopup: string,
+    ): Promise<void> {
+        if (
+            nameSavedPopup &&
+            TwitchMentionNotifier.nameInput &&
+            channelSavedPopup &&
+            TwitchMentionNotifier.channelInput &&
+            nickAbbreviationSavedPopup &&
+            TwitchMentionNotifier.nickAbbreviationInput
+        ) {
+            if (
+                channelSavedPopup === TwitchMentionNotifier.channelInput &&
+                nameSavedPopup === TwitchMentionNotifier.nameInput &&
+                nickAbbreviationSavedPopup ===
+                    TwitchMentionNotifier.nickAbbreviationInput
+            ) {
+                await chrome.runtime.sendMessage({
+                    sameData: true,
+                });
+
+                return;
+            }
+        }
+
+        if (
+            nameSavedPopup &&
+            TwitchMentionNotifier.nameInput &&
+            channelSavedPopup &&
+            TwitchMentionNotifier.channelInput
+        ) {
+            if (
+                channelSavedPopup === TwitchMentionNotifier.channelInput &&
+                nameSavedPopup === TwitchMentionNotifier.nameInput &&
+                !nickAbbreviationSavedPopup &&
+                !TwitchMentionNotifier.nickAbbreviationInput
+            ) {
+                await chrome.runtime.sendMessage({
+                    sameData: true,
+                });
+
+                return;
+            }
+
+            if (
+                nickAbbreviationSavedPopup &&
+                TwitchMentionNotifier.nickAbbreviationInput
+            ) {
+                if (
+                    nickAbbreviationSavedPopup ===
+                        TwitchMentionNotifier.nickAbbreviationInput &&
+                    nameSavedPopup === TwitchMentionNotifier.nameInput &&
+                    channelSavedPopup === TwitchMentionNotifier.channelInput
+                ) {
+                    await chrome.runtime.sendMessage({
+                        sameData: true,
+                    });
+
+                    return;
+                }
+            }
+        }
+    }
+
     private static async changeChannelListener(): Promise<void> {
         chrome.runtime.onMessage.addListener(
             async (request: any): Promise<void> => {
@@ -199,72 +271,11 @@ export class TwitchMentionNotifier {
                         nickAbbreviationSavedPopup,
                     } = startButtonClicked;
 
-                    // Prevent the user from trying to connect with the same inputs
-                    if (
-                        nameSavedPopup &&
-                        TwitchMentionNotifier.nameInput &&
-                        channelSavedPopup &&
-                        TwitchMentionNotifier.channelInput &&
-                        nickAbbreviationSavedPopup &&
-                        TwitchMentionNotifier.nickAbbreviationInput
-                    ) {
-                        if (
-                            channelSavedPopup ===
-                                TwitchMentionNotifier.channelInput &&
-                            nameSavedPopup ===
-                                TwitchMentionNotifier.nameInput &&
-                            nickAbbreviationSavedPopup ===
-                                TwitchMentionNotifier.nickAbbreviationInput
-                        ) {
-                            await chrome.runtime.sendMessage({
-                                sameData: true,
-                            });
-
-                            return;
-                        }
-                    }
-
-                    if (
-                        nameSavedPopup &&
-                        TwitchMentionNotifier.nameInput &&
-                        channelSavedPopup &&
-                        TwitchMentionNotifier.channelInput
-                    ) {
-                        if (
-                            channelSavedPopup ===
-                                TwitchMentionNotifier.channelInput &&
-                            nameSavedPopup ===
-                                TwitchMentionNotifier.nameInput &&
-                            !nickAbbreviationSavedPopup &&
-                            !TwitchMentionNotifier.nickAbbreviationInput
-                        ) {
-                            await chrome.runtime.sendMessage({
-                                sameData: true,
-                            });
-
-                            return;
-                        }
-
-                        if (
-                            nickAbbreviationSavedPopup &&
-                            TwitchMentionNotifier.nickAbbreviationInput
-                        ) {
-                            if (
-                                nickAbbreviationSavedPopup ===
-                                    TwitchMentionNotifier.nickAbbreviationInput &&
-                                nameSavedPopup ===
-                                    TwitchMentionNotifier.nameInput &&
-                                channelSavedPopup ===
-                                    TwitchMentionNotifier.channelInput
-                            ) {
-                                await chrome.runtime.sendMessage({
-                                    sameData: true,
-                                });
-
-                                return;
-                            }
-                        }
-                    }
+                    await TwitchMentionNotifier.preventConnectWithSameInputs(
+                        nameSavedPopup,
+                        channelSavedPopup,
+                        nickAbbreviationSavedPopup,
+                    );
 
                     if (
                         TwitchMentionNotifier.tmiConnected &&
