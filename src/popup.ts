@@ -26,8 +26,6 @@ export class Popup {
     private static toggleText = document.getElementById('toggle-text');
     private static buttonClickEvent: () => Promise<void>;
 
-    // TESTAR isso aqui dentro do buttonClickEventListener(), porque se for true, JÁ DOU UM RETURN !!!
-    // OBS: TENTAR pq isso aqui é assíncrono...
     private static async checkIfInputDataIsTheSameListener(): Promise<void> {
         chrome.runtime.onMessage.addListener(async (request) => {
             const { sameData } = request;
