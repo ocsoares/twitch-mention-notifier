@@ -301,8 +301,6 @@ export class TwitchMentionNotifier {
                         nickAbbreviationSavedPopup,
                     );
 
-                    console.log('CHAMOU NO MUDANDO CHANNEL !!');
-
                     // Leave all channels
                     if (
                         TwitchMentionNotifier.tmiConnected &&
