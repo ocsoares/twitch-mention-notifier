@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 
-import { checkIfChannelExists } from './services/check-if-channel-exists.service';
+import { CheckIfChannelExists } from './services/check-if-channel-exists.service';
 
 export class Popup {
     private static channelInput = document.getElementById(
@@ -146,7 +146,9 @@ export class Popup {
     private static async channelValidation(
         channelInputValue: string,
     ): Promise<boolean> {
-        const isValidChannel = await checkIfChannelExists(channelInputValue);
+        const isValidChannel = await CheckIfChannelExists.execute(
+            channelInputValue,
+        );
 
         if (isValidChannel === undefined) {
             alert('An error occurred, try again later !');
@@ -166,7 +168,7 @@ export class Popup {
     private static async nameValidation(
         nameInputValue: string,
     ): Promise<boolean> {
-        const isValidName = await checkIfChannelExists(nameInputValue);
+        const isValidName = await CheckIfChannelExists.execute(nameInputValue);
 
         if (isValidName === undefined) {
             alert('An error occurred, try again later !');

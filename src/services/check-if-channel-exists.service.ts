@@ -1,22 +1,26 @@
+/* eslint-disable @typescript-eslint/naming-convention */
+
 import axios from 'axios';
 
-export async function checkIfChannelExists(
-    channel: string,
-): Promise<boolean | undefined> {
-    const url =
+export class CheckIfChannelExists {
+    private static url =
         'https://twitch-api-jmwk.onrender.com/twitch/api/search-channel/';
 
-    try {
-        const isValidChannel = await axios.get(`${url}${channel}`);
-
+    public static async execute(channel: string): Promise<boolean | undefined> {
         try {
-            if (isValidChannel.data.data[0].display_name.length) {
-                return true;
+            const isValidChannel = await axios.get(
+                `${CheckIfChannelExists.url}${channel}`,
+            );
+
+            try {
+                if (isValidChannel.data.data[0].display_name.length) {
+                    return true;
+                }
+            } catch (error) {
+                return false;
             }
         } catch (error) {
-            return false;
+            return undefined;
         }
-    } catch (error) {
-        return undefined;
     }
 }
