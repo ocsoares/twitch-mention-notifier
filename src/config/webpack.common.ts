@@ -12,6 +12,7 @@ const config: Configuration = {
     entry: {
         content: './src/content.ts',
         popup: './src/popup.ts',
+        background: './src/background.ts',
     },
     output: {
         path: resolve(__dirname, '..', 'webpack-dist'),
