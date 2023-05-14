@@ -7,7 +7,6 @@ import { IExtensionStates } from './interfaces/IExtensionStates';
 
 console.log('Twitch Mention Notifier is enabled');
 
-// MESCLAR essa Branch de TESTE com a MASTER !!!
 export class TwitchMentionNotifier {
     private static nameInput: string;
     private static channelInput: string;
