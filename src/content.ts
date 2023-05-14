@@ -175,7 +175,7 @@ export class TwitchMentionNotifier {
 
     private static async extensionStateListener(): Promise<void> {
         chrome.runtime.onMessage.addListener(
-            async (request: any): Promise<void> => {
+            async (request: IExtensionStates): Promise<void> => {
                 const { isExtensionEnabledPopup } = request;
 
                 if (isExtensionEnabledPopup === true) {
@@ -280,7 +280,7 @@ export class TwitchMentionNotifier {
 
     private static async changeChannelListener(): Promise<void> {
         chrome.runtime.onMessage.addListener(
-            async (request: any): Promise<void> => {
+            async (request: IExtensionStates): Promise<void> => {
                 const { startButtonClicked } = request;
 
                 if (

@@ -27,15 +27,17 @@ export class Popup {
     private static buttonClickEvent: () => Promise<void>;
 
     private static async checkIfInputDataIsTheSameListener(): Promise<void> {
-        chrome.runtime.onMessage.addListener(async (request) => {
-            const { sameData } = request;
+        chrome.runtime.onMessage.addListener(
+            async (request: IExtensionStates) => {
+                const { sameData } = request;
 
-            if (sameData) {
-                alert('You are already connected with this data !');
+                if (sameData) {
+                    alert('You are already connected with this data !');
 
-                return;
-            }
-        });
+                    return;
+                }
+            },
+        );
     }
 
     private static async changeExtensionIconIfEnabledOrDisabled(
