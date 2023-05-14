@@ -2,14 +2,12 @@
 
 import { Client, ChatUserstate } from 'tmi.js';
 import { createNickAbbreviationInputArray } from './utils/create-nick-abbreviation-input-array.util';
+import { ISavedPopupInputs } from './interfaces/ISavedPopupInputs';
+import { IExtensionStates } from './interfaces/IExtensionStates';
 
 console.log('Twitch Mention Notifier is enabled');
 
-// ARRUMAR porque no Listener de SAIR e ENTRAR no canal quando aperta mt rápido em start ele EN-
-// -TRA no Canal, ficando 2 canais !!!
-// USAR o IInputStorageData !!!
-// >>>IMPORTANTE: Fazer um DELAY no popup.ts para NÃO ficar fazendo Requisições no tmi.js, porque ele BLOQUEIA !!!!
-// OBS: Fazer igual fiz com a Notification lá, com os segundos...
+// MESCLAR essa Branch de TESTE com a MASTER !!!
 export class TwitchMentionNotifier {
     private static nameInput: string;
     private static channelInput: string;
@@ -130,16 +128,16 @@ export class TwitchMentionNotifier {
         await TwitchMentionNotifier.tmiNotificationListener();
     }
 
-    private static async getSavedPopupDataLocalStorage(): Promise<void> {
+    private static async getSavedPopupInputsLocalStorage(): Promise<void> {
         const {
             nameSavedPopup,
             channelSavedPopup,
             nickAbbreviationSavedPopup,
-        } = await chrome.storage.local.get([
+        } = (await chrome.storage.local.get([
             'nameSavedPopup',
             'channelSavedPopup',
             'nickAbbreviationSavedPopup',
-        ]);
+        ])) as ISavedPopupInputs;
 
         TwitchMentionNotifier.nameInput = nameSavedPopup;
         TwitchMentionNotifier.channelInput = channelSavedPopup;
@@ -158,14 +156,14 @@ export class TwitchMentionNotifier {
     private static async enableExtensionIfLoadEnabled(): Promise<void> {
         chrome.storage.local.get(
             'isExtensionEnabledPopup',
-            async (request: any): Promise<void> => {
+            async (request: IExtensionStates): Promise<void> => {
                 const { isExtensionEnabledPopup } = request;
 
                 if (
                     isExtensionEnabledPopup === true &&
                     !TwitchMentionNotifier.tmiConnected
                 ) {
-                    await TwitchMentionNotifier.getSavedPopupDataLocalStorage();
+                    await TwitchMentionNotifier.getSavedPopupInputsLocalStorage();
                     if (TwitchMentionNotifier.channelInput) {
                         await TwitchMentionNotifier.init();
                         TwitchMentionNotifier.extensionEnabled = true;
@@ -181,7 +179,7 @@ export class TwitchMentionNotifier {
                 const { isExtensionEnabledPopup } = request;
 
                 if (isExtensionEnabledPopup === true) {
-                    await TwitchMentionNotifier.getSavedPopupDataLocalStorage();
+                    await TwitchMentionNotifier.getSavedPopupInputsLocalStorage();
 
                     if (!TwitchMentionNotifier.tmiClient) {
                         TwitchMentionNotifier.extensionActivationInProgress =

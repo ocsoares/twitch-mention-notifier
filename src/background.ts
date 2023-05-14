@@ -1,5 +1,7 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 
+import { IExtensionStates } from './interfaces/IExtensionStates';
+
 class Background {
     private static notificationCooldown = 20 * 1000; // 20 seconds
     private static lastActiveTabIdArray: number[];
@@ -12,9 +14,9 @@ class Background {
             lastActiveTabId: port.sender.tab.id,
         });
 
-        const { lastActiveTabId } = await chrome.storage.local.get(
+        const { lastActiveTabId } = (await chrome.storage.local.get(
             'lastActiveTabId',
-        );
+        )) as IExtensionStates;
 
         // Convert the lastActiveTabId to an array to get all tabs at the same time
         // The lastActiveTabId will always be the same, but with multiple tabs open at the same time,
@@ -103,9 +105,10 @@ class Background {
                         port,
                     );
 
-                    const { lastNotification } = await chrome.storage.local.get(
-                        'lastNotification',
-                    );
+                    const { lastNotification } =
+                        (await chrome.storage.local.get(
+                            'lastNotification',
+                        )) as IExtensionStates;
 
                     const nextNotification = lastNotification
                         ? lastNotification + Background.notificationCooldown

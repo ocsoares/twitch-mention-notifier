@@ -1,5 +1,7 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 
+import { IExtensionStates } from './interfaces/IExtensionStates';
+import { ISavedPopupInputs } from './interfaces/ISavedPopupInputs';
 import { CheckIfChannelExists } from './services/check-if-channel-exists.service';
 
 export class Popup {
@@ -82,11 +84,11 @@ export class Popup {
         boolean: boolean,
     ): Promise<void> {
         if (boolean) {
-            await chrome.storage.local.set({
+            await chrome.storage.local.set(<IExtensionStates>{
                 isExtensionEnabledPopup: true,
             });
         } else {
-            await chrome.storage.local.set({
+            await chrome.storage.local.set(<IExtensionStates>{
                 isExtensionEnabledPopup: false,
             });
         }
@@ -94,11 +96,11 @@ export class Popup {
 
     private static async enableExtensionPopupIfLoadEnabled(): Promise<void> {
         const { isExtensionEnabledPopup, nameSavedPopup, channelSavedPopup } =
-            await chrome.storage.local.get([
+            (await chrome.storage.local.get([
                 'isExtensionEnabledPopup',
                 'nameSavedPopup',
                 'channelSavedPopup',
-            ]);
+            ])) as IExtensionStates & ISavedPopupInputs;
 
         if (isExtensionEnabledPopup && nameSavedPopup && channelSavedPopup) {
             Popup.toggleButton.checked = true;
@@ -188,9 +190,9 @@ export class Popup {
     private static async requestDelay(): Promise<boolean> {
         const popupRequestCooldown = 10 * 1000; // 10 seconds
 
-        const { popupRequestDelay } = await chrome.storage.local.get(
+        const { popupRequestDelay } = (await chrome.storage.local.get(
             'popupRequestDelay',
-        );
+        )) as IExtensionStates;
 
         const nextRequest = popupRequestDelay
             ? popupRequestDelay + popupRequestCooldown
@@ -282,11 +284,11 @@ export class Popup {
             nameSavedPopup,
             channelSavedPopup,
             nickAbbreviationSavedPopup,
-        } = await chrome.storage.local.get([
+        } = (await chrome.storage.local.get([
             'nameSavedPopup',
             'channelSavedPopup',
             'nickAbbreviationSavedPopup',
-        ]);
+        ])) as ISavedPopupInputs;
 
         Popup.clearsHTMLInputsValues();
 
