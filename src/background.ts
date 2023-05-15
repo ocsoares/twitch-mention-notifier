@@ -24,15 +24,19 @@ class Background {
         Background.lastActiveTabIdArray.push(lastActiveTabId);
     }
 
+    private static createNotificationTab(mentionedInChannel: string) {
+        chrome.tabs.create({
+            url: `https://www.twitch.tv/${mentionedInChannel}`,
+        });
+    }
+
     private static async notificationOnClickedListener(
         notificationId: string,
         mentionedInChannel: string,
     ): Promise<void> {
         chrome.notifications.onClicked.addListener((clickedNotificationId) => {
             if (clickedNotificationId === notificationId) {
-                chrome.tabs.create({
-                    url: `https://www.twitch.tv/${mentionedInChannel}`,
-                });
+                Background.createNotificationTab(mentionedInChannel);
             }
         });
     }
@@ -47,9 +51,7 @@ class Background {
                     clickedNotificationId === notificationId &&
                     buttonIndex === 0
                 ) {
-                    chrome.tabs.create({
-                        url: `https://www.twitch.tv/${mentionedInChannel}`,
-                    });
+                    Background.createNotificationTab(mentionedInChannel);
                 }
             },
         );
