@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 
 import { IExtensionStates } from './interfaces/IExtensionStates';
+import { INotificationData } from './interfaces/INotificationData';
 
 class Background {
     private static notificationCooldown = 20 * 1000; // 20 seconds
@@ -97,56 +98,58 @@ class Background {
     private static async init(): Promise<void> {
         chrome.runtime.onConnect.addListener((port) => {
             if (port.name === 'content-script') {
-                port.onMessage.addListener(async (message) => {
-                    const {
-                        sendNotification,
-                        mentionedInChannel,
-                        mentionedBy,
-                        badge,
-                    } = message;
+                port.onMessage.addListener(
+                    async (message: INotificationData) => {
+                        const {
+                            sendNotification,
+                            mentionedInChannel,
+                            mentionedBy,
+                            badge,
+                        } = message;
 
-                    Background.lastActiveTabIdArray = [];
+                        Background.lastActiveTabIdArray = [];
 
-                    await Background.preventSendNotificationsToDifferentTabsAtTheSameTime(
-                        port,
-                    );
+                        await Background.preventSendNotificationsToDifferentTabsAtTheSameTime(
+                            port,
+                        );
 
-                    const { lastNotification } =
-                        (await chrome.storage.local.get(
-                            'lastNotification',
-                        )) as IExtensionStates;
+                        const { lastNotification } =
+                            (await chrome.storage.local.get(
+                                'lastNotification',
+                            )) as IExtensionStates;
 
-                    const nextNotification = lastNotification
-                        ? lastNotification + Background.notificationCooldown
-                        : 0;
+                        const nextNotification = lastNotification
+                            ? lastNotification + Background.notificationCooldown
+                            : 0;
 
-                    const currentTime = Date.now();
+                        const currentTime = Date.now();
 
-                    if (
-                        sendNotification &&
-                        Background.lastActiveTabIdArray[0] === // [0] will always be lastActiveTabId !
-                            port.sender.tab.id
-                    ) {
-                        // Cooldown
-                        if (currentTime > nextNotification) {
-                            try {
-                                await Background.createNotifications(
-                                    badge,
-                                    mentionedBy,
-                                    mentionedInChannel,
-                                );
+                        if (
+                            sendNotification &&
+                            Background.lastActiveTabIdArray[0] === // [0] will always be lastActiveTabId !
+                                port.sender.tab.id
+                        ) {
+                            // Cooldown
+                            if (currentTime > nextNotification) {
+                                try {
+                                    await Background.createNotifications(
+                                        badge,
+                                        mentionedBy,
+                                        mentionedInChannel,
+                                    );
 
-                                await chrome.storage.local.set({
-                                    lastNotification: Date.now(),
-                                });
+                                    await chrome.storage.local.set({
+                                        lastNotification: Date.now(),
+                                    });
 
-                                Background.lastActiveTabIdArray = [];
-                            } catch (error) {
-                                console.log('NOTIFICATION NOT SENT', error);
+                                    Background.lastActiveTabIdArray = [];
+                                } catch (error) {
+                                    console.log('NOTIFICATION NOT SENT', error);
+                                }
                             }
                         }
-                    }
-                });
+                    },
+                );
             }
         });
     }

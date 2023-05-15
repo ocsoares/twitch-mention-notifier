@@ -4,6 +4,7 @@ import { Client, ChatUserstate } from 'tmi.js';
 import { createNickAbbreviationInputArray } from './utils/create-nick-abbreviation-input-array.util';
 import { ISavedPopupInputs } from './interfaces/ISavedPopupInputs';
 import { IExtensionStates } from './interfaces/IExtensionStates';
+import { INotificationData } from './interfaces/INotificationData';
 
 console.log('Twitch Mention Notifier is enabled');
 
@@ -36,7 +37,7 @@ export class TwitchMentionNotifier {
                 name: 'content-script',
             });
 
-            toBackgroundScript.postMessage({
+            toBackgroundScript.postMessage(<INotificationData>{
                 sendNotification: true,
                 mentionedInChannel: channel.replace('#', ''),
                 mentionedBy: tags.username,
