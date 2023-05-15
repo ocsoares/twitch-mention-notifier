@@ -61,6 +61,7 @@ class Background {
     private static async createNotifications(
         badge: string,
         mentionedBy: string,
+        mentionerMessage: string,
         mentionedInChannel: string,
     ): Promise<void> {
         const notificationTime = new Date()
@@ -72,7 +73,7 @@ class Background {
                 type: 'basic',
                 iconUrl: 'icons/twitch-icon_48.png',
                 title: 'Twitch Mention Notifier',
-                message: `[${notificationTime}] You were mentioned by ${badge}${mentionedBy} in channel "${mentionedInChannel}" !`,
+                message: `[${notificationTime}] You were mentioned in channel ${mentionedInChannel} by ${badge}${mentionedBy}: "${mentionerMessage}"`,
                 buttons: [
                     {
                         title: 'Open Twitch Channel',
@@ -104,6 +105,7 @@ class Background {
                             sendNotification,
                             mentionedInChannel,
                             mentionedBy,
+                            mentionerMessage,
                             badge,
                         } = message;
 
@@ -135,6 +137,7 @@ class Background {
                                     await Background.createNotifications(
                                         badge,
                                         mentionedBy,
+                                        mentionerMessage,
                                         mentionedInChannel,
                                     );
 

@@ -31,6 +31,7 @@ export class TwitchMentionNotifier {
         function allowNotificationToBackgroundScript(
             channel: string,
             tags: ChatUserstate,
+            message: string,
             badge: string,
         ): void {
             const toBackgroundScript = chrome.runtime.connect({
@@ -41,6 +42,7 @@ export class TwitchMentionNotifier {
                 sendNotification: true,
                 mentionedInChannel: channel.replace('#', ''),
                 mentionedBy: tags.username,
+                mentionerMessage: message,
                 badge,
             });
         }
@@ -91,6 +93,7 @@ export class TwitchMentionNotifier {
                         allowNotificationToBackgroundScript(
                             channel,
                             tags,
+                            message,
                             badge,
                         );
 
@@ -114,6 +117,7 @@ export class TwitchMentionNotifier {
                             allowNotificationToBackgroundScript(
                                 channel,
                                 tags,
+                                message,
                                 badge,
                             );
                         }
