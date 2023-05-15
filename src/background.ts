@@ -60,12 +60,16 @@ class Background {
         mentionedBy: string,
         mentionedInChannel: string,
     ): Promise<void> {
+        const notificationTime = new Date()
+            .toLocaleTimeString()
+            .substring(0, 5); // HH:MM
+
         chrome.notifications.create(
             {
                 type: 'basic',
                 iconUrl: 'icons/twitch-icon_48.png',
                 title: 'Twitch Mention Notifier',
-                message: `You were mentioned by ${badge}${mentionedBy} in channel "${mentionedInChannel}" !`,
+                message: `[${notificationTime}] You were mentioned by ${badge}${mentionedBy} in channel "${mentionedInChannel}" !`,
                 buttons: [
                     {
                         title: 'Open Twitch Channel',
