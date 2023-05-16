@@ -5,9 +5,9 @@
   <br />
 </h1>
 
-> A Chrome extension to notify users when they are mentioned in Twitch chats.
+> A web extension to notify users when they are mentioned in Twitch chats.
 
-Twitch Mention Notifier is a Google Chrome extension that allows users to receive notifications when they are mentioned in Twitch chats. The extension continuously monitors the chats in which the user is active and displays a notification whenever a mention is detected.
+Twitch Mention Notifier is a web extension that allows users to receive notifications when they are mentioned in Twitch chats. The extension continuously monitors the chats in which the user is active and displays a notification whenever a mention is detected.
 
 ## Features ✨
 
@@ -18,7 +18,7 @@ Twitch Mention Notifier is a Google Chrome extension that allows users to receiv
 
 ## Installation 🚀
 
-### 🌐 Chromium (Chrome, Edge, or Brave)
+### 🌐 Chromium (Google Chrome, Edge, or Brave)
 
 1. Download the extension in ZIP format [here](https://github.com/ocsoares/Twitch-Mention-Notifier/releases/latest) on the [Releases Page](https://github.com/ocsoares/Twitch-Mention-Notifier/releases).
 2. Extract the ZIP file to a local directory.
