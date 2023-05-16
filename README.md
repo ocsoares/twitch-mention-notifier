@@ -9,12 +9,37 @@
 
 Twitch Mention Notifier is a web extension that allows users to receive notifications when they are mentioned in Twitch chats. The extension continuously monitors the chats in which the user is active and displays a notification whenever a mention is detected.
 
+# Content
+
+-   [Features ✨](#features-)
+-   [Screenshots 📸](#screenshots-)
+-   [Installation 🚀](#installation-)
+-   [Usage 💡](#usage-)
+-   [Contributing 🤝](#contributing-)
+-   [License 📄](#license-)
+
 ## Features ✨
 
 -   Receive notifications when you are mentioned in Twitch chats 🔔
+-   Notifies when you are mentioned with "@" and also without, so both "@JohnDoe" and "JohnDoe", for example, will activate notifications 💬
+
 -   Click on the notification to open the mentioned chat in a new browser tab 📢
 
 -   20-second cooldown between each new notification, to prevent spam 🕒
+
+## Screenshots 📸
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/ocsoares/twitch-mention-notifier/master/images/twitch-ext-popup-disabled.jpg" alt="Disabled Popup">
+</p>
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/ocsoares/twitch-mention-notifier/master/images/twitch-ext-popup-activated.jpg" alt="Activated Popup">
+</p>
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/ocsoares/twitch-mention-notifier/master/images/twitch-ext-notification.jpg" alt="Notification">
+</p>
 
 ## Installation 🚀
 
@@ -48,4 +73,4 @@ Contributions are welcome! To contribute to the project, follow these steps:
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/ocsoares/Twitch-Mention-Notifier/blob/master/LICENSE)
 
-This project is licensed under the MIT License.
+MIT © ocsoares
