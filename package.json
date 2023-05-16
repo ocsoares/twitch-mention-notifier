@@ -1,7 +1,7 @@
 {
   "name": "twitch-mention-notifier",
   "version": "1.0.0",
-  "description": "A Twitch mention notifier Chrome Extension, when you are mentioned in chat",
+  "description": "A Twitch Mention Notifier web extension, when you are mentioned in chat",
   "private": true,
   "scripts": {
     "build:watch": "tsc --watch --outDir dist",
