@@ -55,7 +55,7 @@ Twitch Mention Notifier is a web extension that allows users to receive notifica
 ## Usage 💡
 
 1. Click on the extension popup.
-2. Enter, respectively, the Twitch channel name from which the chat will be read, your username, and optionally, abbreviations or variations of your username.
+2. Enter, respectively, the twitch channel name from which the chat will be read, your twitch username, and optionally, abbreviations or variations of your twitch username.
 3. When you are mentioned in the Twitch chat, a notification will be displayed on your computer.
 4. Click on the notification to open the mentioned chat in a new browser tab.
 
