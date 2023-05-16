@@ -21,7 +21,10 @@ Twitch Mention Notifier is a web extension that allows users to receive notifica
 ## Features ✨
 
 -   Receive notifications when you are mentioned in Twitch chats 🔔
+
 -   Notifies when you are mentioned with "@" and also without, so both "@JohnDoe" and "JohnDoe", for example, will activate notifications 💬
+
+-   The matching is **case-insensitive**, meaning that it **will work** regardless of whether the mention is in uppercase or lowercase, so "@johndoe" or "JoHNdOe" will work ⌨️
 
 -   Click on the notification to open the mentioned chat in a new browser tab 📢
 
@@ -51,6 +54,8 @@ Twitch Mention Notifier is a web extension that allows users to receive notifica
 4. Enable "Developer mode" in the top right corner of the page.
 5. Click on the "Load unpacked" button and select the folder where you extracted the ZIP file.
 6. The Twitch Mention Notifier extension will be loaded and activated.
+
+⚠️ **IMPORTANT**: The extension will **not work** if activated on chrome://extensions due to browser-specific policies
 
 ## Usage 💡
 
