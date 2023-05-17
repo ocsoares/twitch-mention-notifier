@@ -74,6 +74,7 @@ class Background {
                 iconUrl: 'icons/twitch-icon_48.png',
                 title: 'Twitch Mention Notifier',
                 message: `[${notificationTime}] You were mentioned in channel ${mentionedInChannel} by ${badge}${mentionedBy}: "${mentionerMessage}"`,
+                requireInteraction: true,
                 buttons: [
                     {
                         title: 'Open Twitch Channel',
