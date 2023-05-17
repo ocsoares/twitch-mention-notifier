@@ -5,7 +5,6 @@
   "private": true,
   "scripts": {
     "build:watch": "tsc --watch --outDir dist",
-    "start:dev": "nodemon dist/content.js",
     "webpack:watch": "node ./node_modules/webpack/bin/webpack.js --mode=development --watch --config dist/config/webpack.config.js",
     "webpack:build": "node ./node_modules/webpack/bin/webpack.js --mode=production --config dist/config/webpack.config.js"
   },
