@@ -55,7 +55,7 @@ Twitch Mention Notifier is a web extension that allows users to receive notifica
 5. Click on the "Load unpacked" button and select the folder where you extracted the ZIP file.
 6. The Twitch Mention Notifier extension will be loaded and activated.
 
-⚠️ **IMPORTANT**: The extension will **not work** if activated on chrome://extensions due to browser-specific policies
+⚠️ **IMPORTANT**: The extension will **not work** if activated on chrome://extensions due to browser-specific policies. It should be enabled/disabled when on any **website**. Avoid configuring this extension while in **browser settings** or similar areas.
 
 ## Usage 💡
 
