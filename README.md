@@ -70,9 +70,10 @@ Contributions are welcome! To contribute to the project, follow these steps:
 
 1. Fork the repository. 🍴
 2. Create a new branch with your feature or bug fix: `git checkout -b my-feature`.
-3. Commit your changes: `git commit -m 'Added a new feature'`.
-4. Push to the branch: `git push origin my-feature`.
-5. Open a pull request on GitHub.
+3. Start your changes by running the `build:watch` and `webpack:watch` scripts from the package.json.
+4. Commit your changes: `git commit -m 'Added a new feature'`.
+5. Push to the branch: `git push origin my-feature`.
+6. Open a pull request on GitHub.
 
 ## License 📄
 
