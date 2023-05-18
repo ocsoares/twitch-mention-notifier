@@ -28,12 +28,20 @@ export class TwitchMentionNotifier {
     }
 
     private static async tmiNotificationListener(): Promise<void> {
-        function allowNotificationToBackgroundScript(
+        async function allowNotificationToBackgroundScript(
             channel: string,
             tags: ChatUserstate,
             message: string,
             badge: string,
-        ): void {
+        ): Promise<void> {
+            const { isExtensionEnabledPopup } = (await chrome.storage.local.get(
+                'isExtensionEnabledPopup',
+            )) as IExtensionStates;
+
+            if (!isExtensionEnabledPopup) {
+                return;
+            }
+
             const toBackgroundScript = chrome.runtime.connect({
                 name: 'content-script',
             });
