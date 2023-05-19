@@ -5,6 +5,14 @@
   <br />
 </h1>
 
+<p align="center">
+  <a href="https://github.com/ocsoares/twitch-mention-notifier"><img src="https://img.shields.io/badge/Language-TypeScript-blue.svg" alt="Language"></a>
+  <a href="https://github.com/ocsoares/twitch-mention-notifier/releases"><img src="https://img.shields.io/github/release/ocsoares/twitch-mention-notifier.svg?color=darkgreen" alt="Latest Version"></a>
+  <a href="https://github.com/ocsoares/twitch-mention-notifier/releases"><img src="https://img.shields.io/github/downloads/ocsoares/twitch-mention-notifier/total.svg" alt="Downloads"></a>
+  <a href="https://github.com/ocsoares/twitch-mention-notifier"><img src="https://img.shields.io/github/languages/code-size/ocsoares/twitch-mention-notifier.svg" alt="Code Size"></a>
+  <a href="https://github.com/ocsoares/twitch-mention-notifier/commits/master"><img src="https://img.shields.io/github/last-commit/ocsoares/twitch-mention-notifier.svg" alt="Last Updated"></a>
+</p>
+
 > A web extension to notify users when they are mentioned in Twitch chats.
 
 Twitch Mention Notifier is a web extension that allows users to receive notifications when they are mentioned in Twitch chats. The extension continuously monitors the chats in which the user is active and displays a notification whenever a mention is detected.
