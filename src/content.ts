@@ -5,6 +5,7 @@ import { createNickAbbreviationInputArray } from './utils/create-nick-abbreviati
 import { ISavedPopupInputs } from './interfaces/ISavedPopupInputs';
 import { IExtensionStates } from './interfaces/IExtensionStates';
 import { INotificationData } from './interfaces/INotificationData';
+import { IChangeSavedPopupInputsListener } from './interfaces/IChangeSavedPopupInputsListener';
 
 console.log('Twitch Mention Notifier is enabled');
 
@@ -17,6 +18,7 @@ export class TwitchMentionNotifier {
     private static extensionEnabled = false;
     private static extensionActivationInProgress = false; // Prevent the init() method from stay activated if disable the extension quickly
     private static isConnectedChannel = false; // Prevent the extension from try to leave a channel after it was already left
+    private static isChangedChannel = false;
     private static tmiClient: Client;
 
     private static async connectTmiClient(): Promise<void> {
@@ -224,73 +226,45 @@ export class TwitchMentionNotifier {
         );
     }
 
-    private static async preventConnectWithSameInputs(
-        nameSavedPopup: string,
-        channelSavedPopup: string,
-        nickAbbreviationSavedPopup: string,
-    ): Promise<void> {
+    private static async setInputToStorage(): Promise<void> {
+        await chrome.storage.local.set({
+            nameInputSavedLocalStorage: TwitchMentionNotifier.nameInput,
+
+            channelInputSavedLocalStorage: TwitchMentionNotifier.channelInput,
+
+            nickAbbreviationInputSavedLocalStorage:
+                TwitchMentionNotifier.nickAbbreviationInputArray,
+        });
+    }
+
+    private static async leaveAllChannels(): Promise<void> {
         if (
-            nameSavedPopup &&
-            TwitchMentionNotifier.nameInput &&
-            channelSavedPopup &&
+            TwitchMentionNotifier.tmiConnected &&
             TwitchMentionNotifier.channelInput &&
-            nickAbbreviationSavedPopup &&
-            TwitchMentionNotifier.nickAbbreviationInput
+            !TwitchMentionNotifier.isConnectedChannel
         ) {
-            if (
-                channelSavedPopup === TwitchMentionNotifier.channelInput &&
-                nameSavedPopup === TwitchMentionNotifier.nameInput &&
-                nickAbbreviationSavedPopup ===
-                    TwitchMentionNotifier.nickAbbreviationInput
-            ) {
-                await chrome.runtime.sendMessage({
-                    sameData: true,
-                });
+            TwitchMentionNotifier.isConnectedChannel = true;
 
-                return;
-            }
-        }
+            const channels = TwitchMentionNotifier.tmiClient.getChannels();
 
-        if (
-            nameSavedPopup &&
-            TwitchMentionNotifier.nameInput &&
-            channelSavedPopup &&
-            TwitchMentionNotifier.channelInput
-        ) {
-            if (
-                channelSavedPopup === TwitchMentionNotifier.channelInput &&
-                nameSavedPopup === TwitchMentionNotifier.nameInput &&
-                !nickAbbreviationSavedPopup &&
-                !TwitchMentionNotifier.nickAbbreviationInput
-            ) {
-                await chrome.runtime.sendMessage({
-                    sameData: true,
-                });
-
-                return;
+            for (const channel of channels) {
+                TwitchMentionNotifier.tmiClient.part(channel);
+                await new Promise((resolve) => setTimeout(resolve, 1000));
             }
 
-            if (
-                nickAbbreviationSavedPopup &&
-                TwitchMentionNotifier.nickAbbreviationInput
-            ) {
-                if (
-                    nickAbbreviationSavedPopup ===
-                        TwitchMentionNotifier.nickAbbreviationInput &&
-                    nameSavedPopup === TwitchMentionNotifier.nameInput &&
-                    channelSavedPopup === TwitchMentionNotifier.channelInput
-                ) {
-                    await chrome.runtime.sendMessage({
-                        sameData: true,
-                    });
-
-                    return;
-                }
-            }
+            TwitchMentionNotifier.isConnectedChannel = false;
         }
     }
 
-    private static async changeChannelListener(): Promise<void> {
+    private static async joinChannel(): Promise<void> {
+        if (TwitchMentionNotifier.tmiConnected) {
+            await TwitchMentionNotifier.tmiClient.join(
+                TwitchMentionNotifier.channelInput,
+            );
+        }
+    }
+
+    private static async savePopupInputsToLocalStorageWhenClickButtonListener(): Promise<void> {
         chrome.runtime.onMessage.addListener(
             async (request: IExtensionStates): Promise<void> => {
                 const { startButtonClicked } = request;
@@ -299,61 +273,48 @@ export class TwitchMentionNotifier {
                     startButtonClicked &&
                     TwitchMentionNotifier.extensionEnabled
                 ) {
-                    const {
-                        nameSavedPopup,
-                        channelSavedPopup,
-                        nickAbbreviationSavedPopup,
-                    } = startButtonClicked;
-
-                    await TwitchMentionNotifier.preventConnectWithSameInputs(
-                        nameSavedPopup,
-                        channelSavedPopup,
-                        nickAbbreviationSavedPopup,
-                    );
-
-                    // Leave all channels
-                    if (
-                        TwitchMentionNotifier.tmiConnected &&
-                        TwitchMentionNotifier.channelInput &&
-                        !TwitchMentionNotifier.isConnectedChannel
-                    ) {
-                        TwitchMentionNotifier.isConnectedChannel = true;
-
-                        const channels =
-                            TwitchMentionNotifier.tmiClient.getChannels();
-
-                        for (const channel of channels) {
-                            TwitchMentionNotifier.tmiClient.part(channel);
-                            await new Promise((resolve) =>
-                                setTimeout(resolve, 1000),
-                            );
-                        }
-
-                        TwitchMentionNotifier.isConnectedChannel = false;
-                    }
-
-                    TwitchMentionNotifier.nameInput = nameSavedPopup;
-                    TwitchMentionNotifier.channelInput = channelSavedPopup;
-                    TwitchMentionNotifier.nickAbbreviationInput =
-                        nickAbbreviationSavedPopup;
-
-                    if (TwitchMentionNotifier.nickAbbreviationInput) {
-                        TwitchMentionNotifier.nickAbbreviationInputArray =
-                            createNickAbbreviationInputArray(
-                                TwitchMentionNotifier.nickAbbreviationInput,
-                            );
-                    } else {
-                        TwitchMentionNotifier.nickAbbreviationInputArray = [];
-                    }
-
-                    // Join channel
-                    if (TwitchMentionNotifier.tmiConnected) {
-                        await TwitchMentionNotifier.tmiClient.join(
-                            TwitchMentionNotifier.channelInput,
-                        );
-                    }
+                    await TwitchMentionNotifier.setInputToStorage();
 
                     return;
+                }
+            },
+        );
+    }
+
+    // To prevent other connected browser tabs from not changing the inputs
+    private static async changeSavedPopupInputsLocalStorageListener(): Promise<void> {
+        chrome.storage.local.onChanged.addListener(
+            async (changes): Promise<void> => {
+                const {
+                    nameSavedPopup,
+                    channelSavedPopup,
+                    nickAbbreviationSavedPopup,
+                } = changes as unknown as IChangeSavedPopupInputsListener;
+
+                if (nameSavedPopup) {
+                    TwitchMentionNotifier.nameInput = nameSavedPopup.newValue;
+                }
+
+                // If the channel is changed, leave all channels and join the new one
+                if (channelSavedPopup) {
+                    await TwitchMentionNotifier.leaveAllChannels();
+
+                    TwitchMentionNotifier.channelInput =
+                        channelSavedPopup.newValue;
+
+                    await TwitchMentionNotifier.joinChannel();
+
+                    await TwitchMentionNotifier.setInputToStorage();
+                }
+
+                if (nickAbbreviationSavedPopup) {
+                    TwitchMentionNotifier.nickAbbreviationInput =
+                        nickAbbreviationSavedPopup.newValue;
+
+                    TwitchMentionNotifier.nickAbbreviationInputArray =
+                        createNickAbbreviationInputArray(
+                            nickAbbreviationSavedPopup.newValue,
+                        );
                 }
             },
         );
@@ -362,7 +323,8 @@ export class TwitchMentionNotifier {
     public static async start(): Promise<void> {
         await TwitchMentionNotifier.enableExtensionIfLoadEnabled();
         await TwitchMentionNotifier.extensionStateListener();
-        await TwitchMentionNotifier.changeChannelListener();
+        await TwitchMentionNotifier.savePopupInputsToLocalStorageWhenClickButtonListener();
+        await TwitchMentionNotifier.changeSavedPopupInputsLocalStorageListener();
     }
 }
 

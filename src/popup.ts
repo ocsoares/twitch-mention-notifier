@@ -3,6 +3,7 @@
 import { IExtensionStates } from './interfaces/IExtensionStates';
 import { ISavedPopupInputs } from './interfaces/ISavedPopupInputs';
 import { CheckIfChannelExists } from './services/check-if-channel-exists.service';
+import { createNickAbbreviationInputArray } from './utils/create-nick-abbreviation-input-array.util';
 
 export class Popup {
     private static channelInput = document.getElementById(
@@ -26,18 +27,44 @@ export class Popup {
     private static toggleText = document.getElementById('toggle-text');
     private static buttonClickEvent: () => Promise<void>;
 
-    private static async checkIfInputDataIsTheSameListener(): Promise<void> {
-        chrome.runtime.onMessage.addListener(
-            async (request: IExtensionStates) => {
-                const { sameData } = request;
+    private static async isTryingToConnectWithTheSameInputs(): Promise<boolean> {
+        const {
+            nameInputSavedLocalStorage,
+            channelInputSavedLocalStorage,
+            nickAbbreviationInputSavedLocalStorage,
+        } = await chrome.storage.local.get([
+            'nameInputSavedLocalStorage',
+            'channelInputSavedLocalStorage',
+            'nickAbbreviationInputSavedLocalStorage',
+        ]);
 
-                if (sameData) {
-                    alert('You are already connected with this data !');
+        if (
+            nameInputSavedLocalStorage === Popup.nameInput.value &&
+            channelInputSavedLocalStorage === Popup.channelInput.value &&
+            !nickAbbreviationInputSavedLocalStorage[0] &&
+            !Popup.nickAbbreviationInput.value
+        ) {
+            return true;
+        }
 
-                    return;
-                }
-            },
-        );
+        // nickAbbreviationInput is optional
+        if (Popup.nickAbbreviationInput.value) {
+            const nickAbbreviationInputValueArray =
+                createNickAbbreviationInputArray(
+                    Popup.nickAbbreviationInput.value,
+                );
+
+            if (
+                nameInputSavedLocalStorage === Popup.nameInput.value &&
+                channelInputSavedLocalStorage === Popup.channelInput.value &&
+                nickAbbreviationInputSavedLocalStorage[0] ===
+                    nickAbbreviationInputValueArray[0]
+            ) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static async changeExtensionIconIfEnabledOrDisabled(
@@ -255,6 +282,13 @@ export class Popup {
                 popupRequestDelay: Date.now(),
             });
 
+            const isTryingToConnectWithTheSameInputsResponse =
+                await Popup.isTryingToConnectWithTheSameInputs();
+
+            if (isTryingToConnectWithTheSameInputsResponse) {
+                return alert('You are already connected with this data !');
+            }
+
             alert('Extension activated successfully !');
 
             await chrome.storage.local.set({
@@ -267,12 +301,7 @@ export class Popup {
                 { active: true, currentWindow: true },
                 async (tabs) => {
                     await chrome.tabs.sendMessage(tabs[0].id, {
-                        startButtonClicked: {
-                            channelSavedPopup: Popup.channelInput.value,
-                            nameSavedPopup: Popup.nameInput.value,
-                            nickAbbreviationSavedPopup:
-                                Popup.nickAbbreviationInput.value ?? undefined,
-                        },
+                        startButtonClicked: true,
                     });
                 },
             );
@@ -306,7 +335,6 @@ export class Popup {
     }
 
     public static async start(): Promise<void> {
-        await Popup.checkIfInputDataIsTheSameListener();
         await Popup.enableExtensionPopupIfLoadEnabled();
     }
 }
