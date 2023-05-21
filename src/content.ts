@@ -18,7 +18,6 @@ export class TwitchMentionNotifier {
     private static extensionEnabled = false;
     private static extensionActivationInProgress = false; // Prevent the init() method from stay activated if disable the extension quickly
     private static isConnectedChannel = false; // Prevent the extension from try to leave a channel after it was already left
-    private static isChangedChannel = false;
     private static tmiClient: Client;
 
     private static async connectTmiClient(): Promise<void> {
