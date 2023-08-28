@@ -62,7 +62,7 @@
                 "leadingUnderscore": "allow",
                 "trailingUnderscore": "allow",
                 "filter": {
-                    "regex": "^(__v)$",
+                    "regex": "^(Cache-Control)$",
                     "match": false
                 }                  
             },
@@ -70,7 +70,7 @@
                 "selector": "memberLike",
                 "modifiers": ["private"],
                 "format": ["camelCase"],
-                "leadingUnderscore": "require"
+                "leadingUnderscore": "allow"
             },
             {
                 "selector": "property",
